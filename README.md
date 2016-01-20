@@ -1,6 +1,6 @@
 # Samsu Assasins
 
-By: George Teo [other contributors put your name here]
+By: George Teo, Scarlett Li
 
 Built for UChicago SAMSU assasins 2016. 
 This project is licensed under the terms of the MIT license.
