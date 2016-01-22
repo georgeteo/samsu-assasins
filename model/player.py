@@ -5,12 +5,14 @@ class Player(ndb.Model):
     '''Pllayer object is child of a Team object.
     Key: phone number
     Has:
+        team
         state - ALIVE, DEAD, INVUL, DISARM
         role - DEMO, SNIPER, MEDIC
         realname
         codename
         killed - list of people killed []
     Parent: team'''
+    team = ndb.StringProperty()
     realname = ndb.StringProperty()
     codename = ndb.StringProperty()
     state = ndb.StringProperty()
