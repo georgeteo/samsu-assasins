@@ -84,9 +84,11 @@ class ActionBuilder(object):
         return self.action.put()
 
     def _validate_kill(self):
-        my_team = self.attacker.key.parent()
+        my_teamname = self.attacker.team
+        my_team = Team.get_by_id(my_teamanme)
         my_target = my_team.kill
-        victim_team = self.victim.key.parent()
+        victim_teamname = self.victim.team
+        victim_team = Team.get_by_id(victim_teamanme)
         if my_target != victim_team.id():
             raise ActionError("TEAM", "")
 
