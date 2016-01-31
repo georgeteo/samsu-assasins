@@ -1,5 +1,5 @@
 from google.appengine.ext import ndb
-from player import Player
+from player import Player, Team
 from datetime import datetime
 from error import ActionError
 import logging
@@ -32,75 +32,94 @@ class Action(ndb.Model):
 
 class ActionBuilder(object):
     '''Action builder which takes a message object and returns ActionObject.'''
-    action = Action()
 
-    def __init__(self, message):
-        logging.debug("Action Builder Message: %s, %s, %s".format(message.From, message.To, message.Body))
-        self.message = message
-
-    def make_action(self):
-        action, params = self._get_command()
-        log.debug("Action Builder Action: %s, %s, %s".format(action.attacker, action.action, action.victim))
-        self._get_attacker()
+    @staticmethod
+    def make_action(message):
+        action, params = ActionBuilder.get_command(message.Body)
+        attacker = ActionBuilder.get_attacker(message.From)
 
         if action == "KILL":
-            return self._kill(params), self.action()
+            return ActionBuilder.kill(attacker, params)
         elif action[1:] == "REPLY":
             ref = params.pop(0)
             return self._reply(ref, params)
         else:
             raise ActionError("CMD", action)
 
-    def _get_command(self):
-        message_body = self.message.Body.split()
+    @staticmethod
+    def get_command(body):
+        message_body = body.split()
         action = message_body.pop(0)
         params = message_body
+        logging.info("Action Builder: Parsed {} - {}".format(action, params))
         return action, params
 
-    def _get_attacker(self):
-        self.attacker = Player.get_by_id(self.message.From)
-        log.debug("Action Builder Attacker: %s)".format(self.attacker.realname))
+    @staticmethod
+    def get_attacker(attacker_number):
+        attacker = Player.get_by_id(attacker_number)
+        if not attacker:
+            logging.error("Action Builder: attacker number {} not found in \
+                          get_attacker()".format(attacker_number))
+            raise
+        logging.info("Action Builder: attacker {} found".format(
+            attacker.realname))
+        return attacker
 
-    def _get_victim(self, victim_name):
-        potential_victims = Player.query(Player.codename == victim_name).fetch()
-        for i, victim in enumerate(potential_victims):
-            if i > 0:
-                raise ActionError("NAME", victim_name)
-            self.victim = victim
-            log.debug("Action Builder Attacker: %s)".format(self.victim.realname))
-        raise ActionError("NAME", victim_name)
+    @staticmethod
+    def get_victim(victim_name):
+        victim = Player.query(Player.codename == victim_name).get()
+        if not victim:
+            logging.error("Action Builder: victim {} not found".format(victim_name))
+            raise ActionError("NAME", victim_name)
+        logging.info("Action Builder: victim {} found".format(victim_name))
+        return victim
 
-    def _kill(self, params):
-        victim = params[0]
-        self._get_victim(victim)
-        if self._validate_kill():
-            ''' Invalid kill '''
-            return
-        self.action.attacker = self.attacker.key.id()
-        self.action.action = "KILL"
-        self.action.victim = self.victim.id()
-        self.action.datetime = datetime.now()
-        self.action.need_validation = True
-        return self.action.put()
+    @staticmethod
+    def kill(attacker, params):
+        logging.info("Action Builder: KILL start")
 
-    def _validate_kill(self):
-        my_teamname = self.attacker.team
-        my_team = Team.get_by_id(my_teamanme)
+        victim = ActionBuilder.get_victim(params[0])
+
+        ActionBuilder.validate_kill(attacker, victim)
+
+        action = Action()
+        action.attacker = attacker.key.id()
+        action.action = "KILL"
+        action.victim = victim.key.id()
+        action.datetime = datetime.now()
+        action.need_validation = True
+
+        logging.info("Action Builder: KILL finish")
+
+        return action.put(), action
+
+    @staticmethod
+    def validate_kill(attacker, victim):
+        my_team = Team.get_by_id(attacker.team)
+        if not my_team:
+            logging.error("Action Builder: unable to get my team to validate kill")
+            raise
         my_target = my_team.kill
-        victim_teamname = self.victim.team
-        victim_team = Team.get_by_id(victim_teamanme)
-        if my_target != victim_team.id():
+        victim_team = Team.get_by_id(victim.team)
+        if not victim_team:
+            logging.error("Action Builder: unable to get vicitm team to validate kill")
+            raise
+        if victim_team.key.id() != my_target:
+            logging.debug("Action Builder: target team != victim team")
             raise ActionError("TEAM", "")
 
-        if self.attacker.state == "DEAD":
+        if attacker.state == "DEAD":
+            logging.debug("Action Builder: I am dead")
             raise ActionError("ME", self.attacker.state)
 
-        if self.victim.state != "ALIVE":
+        if victim.state != "ALIVE":
+            logging.debug("Action Builder: Victim is not alive")
             raise ActionError("THEM", self.victim.state)
 
-        return False
+        logging.debug("Action Builder: kill validated")
 
     def _reply(self, ref, params):
+        logging.debug("Action Builder: REPLY")
         lookup = Action.get_by_id(ref)
         if not lookup:
             raise ActionError("REPLY", "reference number")
