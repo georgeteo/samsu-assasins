@@ -39,12 +39,14 @@ def twil():
     ''' Pass message into action builder.'''
     try:
         action_key, action = ActionBuilder.make_action(message)
-        rb = ResponseBuilder(action_key, action)
-        response_num_list, response = rb.build_response()
+        logging.debug("Action Builder Finish")
+        response_num_list, response = ResponseBuilder.build_response(action_key, action)
     except ActionError as message:
+        logging.exception("Error {}".format(message))
         response_num_list = [from_]
         response = "[ERR] {}".format(message)
     except:
+        logging.exception("Unknown Error")
         response_num_list = [from_]
         response = "[ERR] Unknown Error"
 

@@ -42,7 +42,7 @@ class ActionBuilder(object):
             return ActionBuilder.kill(attacker, params)
         elif action[1:] == "REPLY":
             ref = params.pop(0)
-            return self._reply(ref, params)
+            return ActionBuilder.reply(ref, params)
         else:
             raise ActionError("CMD", action)
 
@@ -118,15 +118,16 @@ class ActionBuilder(object):
 
         logging.debug("Action Builder: kill validated")
 
-    def _reply(self, ref, params):
+    @staticmethod
+    def reply(ref, params):
         logging.debug("Action Builder: REPLY")
         lookup = Action.get_by_id(ref)
         if not lookup:
             raise ActionError("REPLY", "reference number")
-        # TODO: add more validation here (on KILL, victims match)
         response = params[0]
         if response == "Y" or response == "y":
             lookup.need_validation = False
             return lookup.put(), lookup
         else:
             raise ActionError("REPLY", "Y/N")
+        # TODO: Change alive/dead state of player once messages are correct.
