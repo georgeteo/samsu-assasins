@@ -4,6 +4,8 @@ from model.handler import CommandHandler
 from model.message import Message
 from model.error import ActionError
 from model.player import Player
+from model.actions import Action
+from model.bomb import Bomb
 import logging
 
 app = Flask(__name__)
@@ -70,38 +72,50 @@ def twil():
 
     return log
 
-# @app.route('/bomb', methods=['POST'])
-# def bomb_worker():
-#     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-#     key = request.form.get('id', "")
-#     bomb_action = Action.get_by_id(key)
-#     if not bomb_action:
-#         logging.error("Bomb Worker: No bomb action found")
-#         raise
-#
-#     bomb_action.trigger = True
-#     bomb_key = bomb_action.put()
-#     response_num_list, response = ResponseBuilder.build_response(
-#         bomb_key, bomb_action)
-#
-#     for response_number in response_num_list:
-#         logging.info("Making message {} for {} with num_lis {}".format(response, response_number, response_num_list))
-#         '''Make message'''
-#         outgoing_message = Message(From=SERVER_NUMBER,
-#                                    To=response_number,
-#                                    Body=response)
-#         outgoing_message.put()
-#
-#         '''Send message'''
-#         client.messages.create(
-#             to=response_number,
-#             from_=SERVER_NUMBER,
-#             body=response)
-#
-#     return "Bomb triggered at {}".format(bomb_action.place)
-#
+@app.route('/bomb', methods=['POST'])
+def bomb_worker():
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+    key = request.form.get('id', "")
+    bomb = Bomb.get_by_id(key)
+    if not bomb:
+        logging.error("Bomb Worker: No bomb found")
+        raise
 
+    bomb.trigger = True
+    bomb_key = bomb.put()
 
+    action = Action()
+    action.attacker = bomb.attacker
+    action.action = "BOMB"
+    action.victim = "*"
+    action.datetime = datetime.now()
+    action.place = bomb.place
+    action_key = action.put()
+
+    response_num_list = [key.id() for key in Player.query().fetch(keys_only=True)]
+    response = "[REPLY {}] {} has been bombed at {}-{} {}:{}. \
+        Reply Y if you were there.".format(action_key, action.place,
+                                           action.datetime.month,
+                                           action.datetime.day,
+                                           action.datetime.hour,
+                                           action.datetime.minute)
+    for response_number in response_num_list:
+        logging.info("Making message {} for {} with num_lis {}".format(
+            response, response_number, response_num_list))
+
+        '''Make message'''
+        outgoing_message = Message(From=SERVER_NUMBER,
+                                   To=response_number,
+                                   Body=response)
+        outgoing_message.put()
+
+        '''Send message'''
+        client.messages.create(
+            to=response_number,
+            from_=SERVER_NUMBER,
+            body=response)
+
+    return "Bomb triggered at {}".format(bomb.place)
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -16,7 +16,9 @@ class CommandHandler(object):
             return Kill.handler(attacker, params)
         elif action[1:] == "REPLY":
             ref = params.pop(0)[:-1]
-            return Reply.handler(ref, params)
+            return Reply.handler(ref, params, attacker)
+        elif action == "BOMB":
+            return Bomb.handler(attacker, params)
         else:
             raise ActionError("CMD", action)
 
