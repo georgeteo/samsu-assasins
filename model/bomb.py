@@ -1,8 +1,8 @@
 from google.appengine.ext import ndb
 from model.error import ActionError
-from google.appengine.ext import ndb
-from google.appengine.api import Task
+from google.appengine.api import taskqueue
 from datetime import datetime
+import logging
 
 class Bomb(ndb.Model):
     attacker = ndb.StringProperty()
@@ -12,6 +12,9 @@ class Bomb(ndb.Model):
 
     @staticmethod
     def handler(attacker, params):
+        if attacker.role != "DEMO":
+            raise ActionError("ROLE", "DEMO")
+
         place = params.pop(0)
         if not place:
             raise ActionError("LOCATION", "")
@@ -29,11 +32,10 @@ class Bomb(ndb.Model):
 
         bomb_key = bomb.put()
 
-        task = Task(url="/bomb", params={"id": bomb_key}, eta=time)
+        task = taskqueue.Task(url="/bomb", params={"id": bomb_key}, eta=time)
         task.add(queue_name="bomb")
+
+        logging.info("BOMB: set for {} at {}".format(time, place))
 
         return bomb.attacker, "Your bomb in {} will explode at {}-{} {}:{}".format(
             bomb.place, time.month, time.day, time.hour, time.minute)
-
-
-

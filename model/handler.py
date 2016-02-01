@@ -3,7 +3,7 @@ from model.kill import Kill
 from model.util import Util
 from model.error import ActionError
 import logging
-
+from model.bomb import Bomb
 
 class CommandHandler(object):
 
