@@ -16,6 +16,10 @@ class ActionError(Exception):
             self.message = "Your target is {}".format(params)
         elif self.error_type == "REPLY":
             self.message = "Reply {} is invalid".format(self.params)
+        elif self.error_type == "LOCATION":
+            self.message = "Your location \"{}\" is invalid".format(self.params)
+        elif self.error_type == "ROLE":
+            self.message = "You are not the {}".format(self.params)
 
 
     def __str__(self):

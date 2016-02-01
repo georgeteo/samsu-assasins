@@ -1,0 +1,4 @@
+total_storage_limit: 100M
+queue:
+- name: bomb
+  rate: 30/s
