@@ -22,7 +22,7 @@ class Bomb(ndb.Model):
         if attacker.state == "DEAD":
             raise ActionError("ME", "DEAD")
 
-        if datetime.now() < attacker.can_set_bomb_after:
+        if datetime.now() < attacker.can_set_after:
             raise ActionError("BOMB", "")
 
         ''' Parse place and time '''
@@ -37,12 +37,12 @@ class Bomb(ndb.Model):
                         int(params[2]),
                         int(params[3]),
                         tzinfo=central)
-        utc_dt = Util.chi_to_utc(chi_dt).replace(tzinfo=None)
+        utc_dt = Util.chi_to_utc(chi_dt)
         logging.debug("CHI time: {}".format(chi_dt))
         logging.debug("UTC time: {}".format(utc_dt))
 
         if utc_dt < datetime.now():
-            cur_time = Util.utc_to_chi(datetime.now().replace(tzinfo=pytz.utc)).isoformat(' ')
+            cur_time = Util.utc_to_chi(datetime.now()).isoformat(' ')
             logging.error("BOMB: trying to set time {} before now {} (UTC)".format(utc_dt.isoformat(' '), datetime.now().isoformat(' ')))
             raise ActionError("TIME", [chi_dt, cur_time])
 
@@ -56,15 +56,15 @@ class Bomb(ndb.Model):
 
         ''' Invalidate old bomb '''
         try:
-            old_bomb = Bomb.get_by_id(attacker.bomb)
-            logging.info("BOMB: invalidating old bomb with id {}".format(attacker.bomb))
+            old_bomb = Bomb.get_by_id(attacker.item)
+            logging.info("BOMB: invalidating old bomb with id {}".format(attacker.item))
             old_bomb.deprecated = True
             old_bomb.put()
         except:
             logging.info("BOMB: unable to invalidate old bomb")
 
         ''' Setting new bomb '''
-        attacker.bomb = bomb_key.id()
+        attacker.item = bomb_key.id()
         attacker.put()
 
         task = taskqueue.Task(url="/bomb", params={"id": bomb_key.id()}, eta=utc_dt)
@@ -74,3 +74,4 @@ class Bomb(ndb.Model):
 
         return bomb.attacker, "Your bomb in {} will explode at {}".format(
             bomb.place, chi_dt.isoformat(' '))
+

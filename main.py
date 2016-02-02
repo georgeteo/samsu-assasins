@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 from model.util import Util
 import pytz
+from google.appengine.api import taskqueue
 
 app = Flask(__name__)
 
@@ -98,7 +99,7 @@ def bomb_worker():
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
     attacker = Player.get_by_id(bomb.attacker)
-    attacker.can_set_bomb_after = Util.next_day()
+    attacker.can_set_after = Util.next_day()
     attacker.put()
 
     bomb.trigger = True
@@ -134,6 +135,84 @@ def bomb_worker():
             body=response)
 
     return "Bomb triggered at {}".format(bomb.place)
+
+@app.route('/invul', methods=["POST"])
+def invul_worker():
+    ''' Get invul id'''
+    req_key = request.form("id", "")
+    inv = Invul.get_by_id(int(req_key))
+
+    ''' No Inv found '''
+    if not inv:
+        logging.error("INV worker: no INV found")
+        raise Exception()
+
+    '''Inv deprecated'''
+    if inv.deprecated:
+        logging.info("INV Worker: Inv deprecated. No action.")
+        return
+
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+
+    '''Target dead. Report back to medic'''
+    target_num = inv.target
+    target = Player.get_by_id(target_num)
+    if not target:
+        logging.error("INV worker: cannot find target {}".format(target_num))
+        return
+    if target.state == "DEAD":
+        logging.error("INV worker: Target {} has died. Cannot grant INVUL".format(target.codename))
+        response = "Your INVUL target has died. Cannot grant dead people INVUL."
+        msg = Message(From=SERVER_NUMBER,
+                      To=inv.medic,
+                      Body=response)
+        msg.put()
+        client.messages.create(
+            to=inv.medic,
+            from_=SERVER_NUMBER,
+            body=response)
+        return
+
+    '''Target alive. If INVUL not yet in effect, trigger'''
+    if not inv.in_effect:
+        logging.info("INVUL worker: Triggering 1 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
+        inv.in_effect = True
+        inv_key = inv.put()
+        task = taskqueue.Task(url="/invul", params={"id": inv_key.id()}, eta=inv.end_time)
+        task.add(queue_name="invul")
+
+        target.invul = True
+        target.put()
+
+        response  = "You have been granted INVUL for 1 hour from {} to {}".format(
+            inv.start_time, inv.end_time)
+        msg = Message(From=SERVER_NUMBER,
+                      To=inv.target,
+                      Body=response)
+        msg.put()
+        client.messages.create(
+            to=inv.target,
+            from_=SERVER_NUMBER,
+            body=response)
+        return
+    else:
+        logging.info("INVUL worker: END 1 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
+        inv.deprecated = True
+        inv.put()
+        target.invul = False
+        target.put()
+
+        response = "Your INVUL period has ended. You are no longer INVUL."
+        msg = Message(From=SERVER_NUMBER,
+                      To=inv.target,
+                      Body=response)
+        msg.put()
+        client.messages.create(
+            to=inv.target,
+            from_=SERVER_NUMBER,
+            body=response)
+        return
+
 
 @app.errorhandler(404)
 def page_not_found(e):

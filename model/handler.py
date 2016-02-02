@@ -19,6 +19,8 @@ class CommandHandler(object):
             return Reply.handler(ref, params, attacker)
         elif action == "BOMB":
             return Bomb.handler(attacker, params)
+        elif action == "INVUL":
+            return Invul.handler(attacker, params)
         else:
             raise ActionError("CMD", action)
 

@@ -23,8 +23,9 @@ class ActionError(Exception):
         elif self.error_type == "TIME":
             self.message = "You cannot set a time {} before current time {}".format(self.params[0], self.params[1])
         elif self.error_type == "BOMB":
-            self.message = "You cannot set the bomb at this time."
-
+            self.message = "You cannot set the bomb at this time. Please wait until midnight."
+        elif self.error_type == "INVUL":
+            self.message = "You cannot set invuln at this time. Please wait until midnight."
 
     def __str__(self):
         return repr(self.message)

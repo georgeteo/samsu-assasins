@@ -17,10 +17,11 @@ class Player(ndb.Model):
     realname = ndb.StringProperty()
     codename = ndb.StringProperty()
     state = ndb.StringProperty()
+    invul = ndb.BooleanProperty()
     role = ndb.StringProperty()
     killed = ndb.JsonProperty(default=[])
-    can_set_bomb_after = ndb.DateTimeProperty(default=datetime.min)
-    bomb = ndb.IntegerProperty()
+    can_set_after = ndb.DateTimeProperty(default=datetime.min)
+    item = ndb.IntegerProperty()
 
 
 class Team(ndb.Model):

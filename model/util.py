@@ -2,7 +2,7 @@ from model.player import Player
 import logging
 from model.error import ActionError
 import pytz
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time
 
 class Util(object):
     @staticmethod
@@ -27,13 +27,15 @@ class Util(object):
 
     @staticmethod
     def chi_to_utc(chi_dt):
-        return chi_dt.astimezone(pytz.utc) + timedelta(minutes=7)
+        return chi_dt.replace(tzinfo=None) + timedelta(hours=6)
 
     @staticmethod
     def utc_to_chi(utc_dt):
-        central = pytz.timezone("US/Central")
-        return utc_dt.astimezone(central)
+        return utc_dt.replace(tzinfo=None) - timedelta(hours=6)
 
     @staticmethod
     def next_day():
-        return datetime.combine(date.today() + timedelta(1), datetime.min.time())
+        chi_today = Util.utc_to_chi(datetime.utcnow()).date()
+        chi_tomorrow = chi_today + timedelta(1)
+        return datetime.combine(chi_tomorrow, time(6, 0, 0))
+
