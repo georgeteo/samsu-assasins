@@ -1,4 +1,5 @@
 from google.appengine.ext import ndb
+from datetime import datetime
 
 
 class Player(ndb.Model):
@@ -18,6 +19,8 @@ class Player(ndb.Model):
     state = ndb.StringProperty()
     role = ndb.StringProperty()
     killed = ndb.JsonProperty(default=[])
+    can_set_bomb_after = ndb.DateTimeProperty(default=datetime.min)
+    bomb = ndb.IntegerProperty()
 
 
 class Team(ndb.Model):

@@ -20,6 +20,10 @@ class ActionError(Exception):
             self.message = "Your location \"{}\" is invalid".format(self.params)
         elif self.error_type == "ROLE":
             self.message = "You are not the {}".format(self.params)
+        elif self.error_type == "TIME":
+            self.message = "You cannot set a time {} before current time {}".format(self.params[0], self.params[1])
+        elif self.error_type == "BOMB":
+            self.message = "You cannot set the bomb at this time."
 
 
     def __str__(self):

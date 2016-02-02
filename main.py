@@ -7,6 +7,9 @@ from model.player import Player
 from model.actions import Action
 from model.bomb import Bomb
 import logging
+from datetime import datetime
+from model.util import Util
+import pytz
 
 app = Flask(__name__)
 
@@ -74,12 +77,29 @@ def twil():
 
 @app.route('/bomb', methods=['POST'])
 def bomb_worker():
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    key = request.form.get('id', "")
-    bomb = Bomb.get_by_id(key)
+    ''' Get bomb id '''
+    req_key = request.form.get('id', "")
+    bomb = Bomb.get_by_id(int(req_key))
+
+    ''' ERROR: no bomb found by id '''
     if not bomb:
-        logging.error("Bomb Worker: No bomb found")
-        raise
+        logging.error("BOMB Worker: No bomb found by key {}".format(req_key))
+        raise Exception()
+
+    ''' Bomb deprecated no action '''
+    if bomb.deprecated:
+        logging.info("BOMB Worker: Bomb with key {} deprecated. No explosion".format(req_key))
+        return
+
+    ''' Trigger bomb '''
+    logging.info("BOMB: triggered at {} UTC {} Chicago".format(
+        datetime.now(),
+        Util.utc_to_chi(datetime.now().replace(tzinfo=pytz.utc))))
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+
+    attacker = Player.get_by_id(bomb.attacker)
+    attacker.can_set_bomb_after = Util.next_day()
+    attacker.put()
 
     bomb.trigger = True
     bomb_key = bomb.put()
@@ -92,15 +112,13 @@ def bomb_worker():
     action.place = bomb.place
     action_key = action.put()
 
-    response_num_list = [key.id() for key in Player.query().fetch(keys_only=True)]
-    response = "[REPLY {}] {} has been bombed at {}-{} {}:{}. \
-        Reply Y if you were there.".format(action_key, action.place,
-                                           action.datetime.month,
-                                           action.datetime.day,
-                                           action.datetime.hour,
-                                           action.datetime.minute)
+    response_num_list = [key.id() for key in Player.query(Player.state.IN(["ALIVE", "DISARM"]) ).fetch(keys_only=True)]
+    response = "[REPLY {}] {} has been bombed at {}. Reply Y if you were there.".format(
+        action_key.id(), action.place,
+        Util.utc_to_chi(action.datetime.replace(tzinfo=pytz.utc)).isoformat(' '))
+
     for response_number in response_num_list:
-        logging.info("Making message {} for {} with num_lis {}".format(
+        logging.info("Making message {} for {} with num_list {}".format(
             response, response_number, response_num_list))
 
         '''Make message'''
@@ -126,4 +144,4 @@ def page_not_found(e):
 @app.errorhandler(500)
 def application_error(e):
     """Return a custom 500 error."""
-    return 'Sorry, unexpected error: {}'.format(e), 500
+    return 'Sorry, unexpected error: {}'.format(e),z500

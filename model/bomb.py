@@ -3,39 +3,74 @@ from model.error import ActionError
 from google.appengine.api import taskqueue
 from datetime import datetime
 import logging
+from model.util import Util
+import pytz
 
 class Bomb(ndb.Model):
     attacker = ndb.StringProperty()
     place = ndb.StringProperty()
     time = ndb.DateTimeProperty()
     trigger = ndb.BooleanProperty(default=False)
+    deprecated = ndb.BooleanProperty(default=False)
 
     @staticmethod
     def handler(attacker, params):
+        '''Validation'''
         if attacker.role != "DEMO":
             raise ActionError("ROLE", "DEMO")
 
+        if attacker.state == "DEAD":
+            raise ActionError("ME", "DEAD")
+
+        if datetime.now() < attacker.can_set_bomb_after:
+            raise ActionError("BOMB", "")
+
+        ''' Parse place and time '''
         place = params.pop(0)
         if not place:
             raise ActionError("LOCATION", "")
-        time = datetime(2016,
+
+        central = pytz.timezone("US/Central")
+        chi_dt = datetime(2016,
                         int(params[0]),
                         int(params[1]),
                         int(params[2]),
-                        int(params[3]))
+                        int(params[3]),
+                        tzinfo=central)
+        utc_dt = Util.chi_to_utc(chi_dt).replace(tzinfo=None)
+        logging.debug("CHI time: {}".format(chi_dt))
+        logging.debug("UTC time: {}".format(utc_dt))
 
+        if utc_dt < datetime.now():
+            cur_time = Util.utc_to_chi(datetime.now().replace(tzinfo=pytz.utc)).isoformat(' ')
+            logging.error("BOMB: trying to set time {} before now {} (UTC)".format(utc_dt.isoformat(' '), datetime.now().isoformat(' ')))
+            raise ActionError("TIME", [chi_dt, cur_time])
+
+        '''Make new bomb'''
         bomb = Bomb()
         bomb.attacker = attacker.key.id()
         bomb.place = place
-        bomb.time = time
+        bomb.time = utc_dt
         bomb.trigger = False
-
         bomb_key = bomb.put()
 
-        task = taskqueue.Task(url="/bomb", params={"id": bomb_key}, eta=time)
+        ''' Invalidate old bomb '''
+        try:
+            old_bomb = Bomb.get_by_id(attacker.bomb)
+            logging.info("BOMB: invalidating old bomb with id {}".format(attacker.bomb))
+            old_bomb.deprecated = True
+            old_bomb.put()
+        except:
+            logging.info("BOMB: unable to invalidate old bomb")
+
+        ''' Setting new bomb '''
+        attacker.bomb = bomb_key.id()
+        attacker.put()
+
+        task = taskqueue.Task(url="/bomb", params={"id": bomb_key.id()}, eta=utc_dt)
         task.add(queue_name="bomb")
 
-        logging.info("BOMB: set for {} at {}".format(time, place))
+        logging.info("BOMB: set for {} at {}".format(utc_dt, place))
 
-        return bomb.attacker, "Your bomb in {} will explode at {}-{} {}:{}".format(
-            bomb.place, time.month, time.day, time.hour, time.minute)
+        return bomb.attacker, "Your bomb in {} will explode at {}".format(
+            bomb.place, chi_dt.isoformat(' '))
