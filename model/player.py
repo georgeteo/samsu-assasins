@@ -17,9 +17,9 @@ class Player(ndb.Model):
     realname = ndb.StringProperty()
     codename = ndb.StringProperty()
     state = ndb.StringProperty()
-    invul = ndb.BooleanProperty()
+    invul = ndb.BooleanProperty(default=False)
+    disarm = ndb.BooleanProperty(default=False)
     role = ndb.StringProperty()
-    killed = ndb.JsonProperty(default=[])
     can_set_after = ndb.DateTimeProperty(default=datetime.min)
     item = ndb.IntegerProperty()
 

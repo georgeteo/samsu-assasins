@@ -4,7 +4,9 @@ from google.appengine.api import taskqueue
 from datetime import datetime
 import logging
 from model.util import Util
+from model.actions import Action
 import pytz
+from model.player import Player
 
 class Bomb(ndb.Model):
     attacker = ndb.StringProperty()
@@ -24,6 +26,9 @@ class Bomb(ndb.Model):
 
         if datetime.now() < attacker.can_set_after:
             raise ActionError("BOMB", "")
+
+        if attacker.disarm:
+            raise ActionError("ME", "DISARM")
 
         ''' Parse place and time '''
         place = params.pop(0)
@@ -74,4 +79,31 @@ class Bomb(ndb.Model):
 
         return bomb.attacker, "Your bomb in {} will explode at {}".format(
             bomb.place, chi_dt.isoformat(' '))
+
+    @staticmethod
+    def reply_handler(action, response, from_):
+        # Deep copy bomb
+        action_c = Action()
+        action_c.attacker = action.attacker
+        action_c.action = action.action
+        action_c.victim = from_.key.id()
+        action_c.datetime = datetime.now()
+        action_c.place = action.place
+
+        if response == "Y" or response == "y":
+            action_c.need_validation = False
+            action_c.incorrect_kill = False
+            action_c.put()
+
+            victim = Player.get_by_id(action_c.victim)
+            victim.state = "DEAD"
+            victim.put()
+
+            return "*", "{} has been killed".format(victim.codename)
+
+        else:
+            action_c.need_validation = True
+            action_c.incorrect_kill = True
+            action_c.put()
+            return "", ""
 

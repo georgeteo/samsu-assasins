@@ -4,3 +4,5 @@ queue:
   rate: 30/s
 - name: invul
   rate: 30/s
+- name: disarm
+  rate: 30/s

@@ -11,6 +11,7 @@ from datetime import datetime
 from model.util import Util
 import pytz
 from google.appengine.api import taskqueue
+from model.disarm import Disarm
 
 app = Flask(__name__)
 
@@ -45,6 +46,8 @@ def twil():
     ''' Pass message into action builder.'''
     try:
         response_to, response = CommandHandler.handler(message)
+        if response_to == "" and response == "":
+            return
         if response_to == "*":
             response_num_list = [key.id() for key in Player.query().fetch(keys_only=True)]
         else:
@@ -90,7 +93,7 @@ def bomb_worker():
     ''' Bomb deprecated no action '''
     if bomb.deprecated:
         logging.info("BOMB Worker: Bomb with key {} deprecated. No explosion".format(req_key))
-        return
+        return "BOMB Worker: Deprecated Bomb"
 
     ''' Trigger bomb '''
     logging.info("BOMB: triggered at {} UTC {} Chicago".format(
@@ -150,7 +153,7 @@ def invul_worker():
     '''Inv deprecated'''
     if inv.deprecated:
         logging.info("INV Worker: Inv deprecated. No action.")
-        return
+        return "INVUL Worker: Deprecated"
 
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
@@ -171,7 +174,7 @@ def invul_worker():
             to=inv.medic,
             from_=SERVER_NUMBER,
             body=response)
-        return
+        return "INVUL Worker"
 
     '''Target alive. If INVUL not yet in effect, trigger'''
     if not inv.in_effect:
@@ -194,7 +197,7 @@ def invul_worker():
             to=inv.target,
             from_=SERVER_NUMBER,
             body=response)
-        return
+        return "INVUL Worker"
     else:
         logging.info("INVUL worker: END 1 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
         inv.deprecated = True
@@ -211,7 +214,56 @@ def invul_worker():
             to=inv.target,
             from_=SERVER_NUMBER,
             body=response)
-        return
+        return "INVUL Worker"
+
+@app.route('/disarm', methods=['POST'])
+def disarm_worker():
+    ''' Get disarm id'''
+    req_key = request.form("id", "")
+    disarm = Disarm.get_by_id(int(req_key))
+
+    ''' No disarm found '''
+    if not disarm:
+        logging.error("DISARM worker: no DISARM found")
+        raise Exception()
+
+    '''Disarm deprecated'''
+    if disarm.deprecated:
+        logging.info("DISARM Worker: Disarm deprecated. No action.")
+        return "DISARM Worker: deprecated"
+
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+    disarmed_player = Player.get_by_id(disarm.disarmed)
+    disarmed_player.disarm = False
+    disarm_player.put()
+
+    disarm.deprecated = True
+    disarm.put()
+
+    logging.info("DISARM Worker: Turning off disarmed state for {}".format(disarm.disarmed))
+
+    response = "You are no longer DISARMED. Go ahead and kill people."
+    msg = Message(From=SERVER_NUMBER,
+                  To=disarm.disarmed,
+                  Body=response)
+    msg.put()
+    client.messages.create(
+        to=disarm.disarmed,
+        from_=SERVER_NUMBER,
+        body=response)
+    return "DISARM WORKER"
+
+
+@app.route("/revive")
+def revive():
+    players = Player.query().fetch()
+    for player in players:
+        player.state = "ALIVE"
+        player.put()
+    return "All players revived"
+
+
+
 
 
 @app.errorhandler(404)

@@ -3,6 +3,9 @@ from model.player import Player
 import logging
 from model.error import ActionError
 from datetime import datetime
+from model.kill import Kill
+from model.bomb import Bomb
+from model.disarm import Disarm
 
 
 class Reply(object):
@@ -13,33 +16,15 @@ class Reply(object):
         if not lookup:
             raise ActionError("REPLY", "reference number")
 
-        # Deep copy if bomb
-        if lookup.victim == "*":
-            lookup2 = Action()
-            lookup2.attacker = lookup.attacker
-            lookup2.action = lookup.action
-            lookup2.victim = From.key.id()
-            lookup2.datetime = datetime.now()
-            lookup2.place = lookup.place
-        else:
-            lookup2 = lookup
-
         response = params[0]
-        if response == "Y" or response == "y":
-            lookup2.need_validation = False
-            lookup2.incorrect_kill = False
+        if response != "Y" and response != "y" and response != "N" and response != "n":
+            raise ActionError("REPLY", response)
 
-            lookup_victim = Player.get_by_id(lookup2.victim)
-            lookup_victim.state = "DEAD"
-            lookup_victim.put()
-
-            lookup2.put()
-
-            return "*", "{} has been killed".format(lookup_victim.codename)
-        elif response == "N" or response == "n":
-            lookup2.need_validation = True
-            lookup2.incorrect_kill = True
-            return lookup2.attacker, "Your victim claims he/she was not killed.\
-                Please check that you have the correct codename."
+        if lookup.action == "KILL":
+            return Kill.reply_handler(lookup, response)
+        elif lookup.action == "BOMB":
+            return Bomb.reply_handler(lookup, response, From)
+        elif lookup.action == "DISARM":
+            return Disarm.reply_handler(lookup, response)
         else:
-            raise ActionError("REPLY", "Y/N")
+            raise ActionError("REPLY", response)

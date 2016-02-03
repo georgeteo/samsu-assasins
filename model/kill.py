@@ -1,6 +1,6 @@
 import logging
 from model.util import Util
-from model.player import Team
+from model.player import Team, Player
 from model.error import ActionError
 from model.actions import Action
 from datetime import datetime
@@ -26,7 +26,7 @@ class Kill(object):
         logging.info("KILL finish")
 
         return action.victim, "[REPLY {}] {} claimed to have killed you. \
-            Reply Y/N.".format(action_key, attacker.realname)
+            Reply Y/N.".format(action_key.id(), attacker.realname)
 
     @staticmethod
     def validate_kill(attacker, victim):
@@ -51,4 +51,32 @@ class Kill(object):
             logging.debug("KILL: Victim is not alive")
             raise ActionError("THEM", victim.state)
 
+        if victim.invul:
+            logging.debug("KILL: Victim is invul")
+            raise ActionError("THEM", "INVUL")
+
+        if attacker.disarm:
+            logging.debug("KILL: Attacker is DISARM")
+            raise ActionError("ME", "DISARM")
+
         logging.debug("KILL: kill validated")
+
+    @staticmethod
+    def reply_handler(action, response):
+        if response == "Y" or response == "y":
+            action.need_validation = False
+            action.incorrect_kill = False
+            action.put()
+
+            victim = Player.get_by_id(action.victim)
+            victim.state = "DEAD"
+            victim.put()
+
+            return "*", "{} has been killed".format(victim.codename)
+        else:
+            action.need_validation = False
+            action.incorrect_kill = False
+            action.put()
+            return action.attacker, "Your victim claims that he/she was not killed.\
+                Please check that you have the correct codename"
+

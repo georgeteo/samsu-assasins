@@ -4,6 +4,7 @@ from model.util import Util
 from model.error import ActionError
 import logging
 from model.bomb import Bomb
+from model.disarm import Disarm
 
 class CommandHandler(object):
 
@@ -21,6 +22,8 @@ class CommandHandler(object):
             return Bomb.handler(attacker, params)
         elif action == "INVUL":
             return Invul.handler(attacker, params)
+        elif action == "DISARM":
+            return Disarm.handler(attacker, params)
         else:
             raise ActionError("CMD", action)
 
