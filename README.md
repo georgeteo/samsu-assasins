@@ -19,3 +19,28 @@ dev_appserver.py .
 // To upload a new version to app engine:
 appcfg.py update .
 ```
+
+## TODO
+
+1. Unit test
+2. Spy Function
+3. Custom Control Panel
+4. Use Team
+
+## Testing TODO
+1. Handler.py routing of each command + Error command
+2. Kill.handler and subcommands
+3. REPLY.handler and subcommands
+4. Bomb.handler and subcommands
+5. Invul.handler and subcommands
+6. Disarm.handler and subcommands
+7. Action Error handling in Main.py
+8. Unknown Error handling in Main.py
+9. Sending outoing messages to response num_list
+
+Bomb worker
+Invul worker
+Disarm worker
+
+
+

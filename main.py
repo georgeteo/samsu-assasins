@@ -63,7 +63,7 @@ def twil():
         response = "[ERR] Unknown Error"
 
     for response_number in response_num_list:
-        logging.info("Making message {} for {} with num_lis {}".format(response, response_number, response_num_list))
+        logging.info("Making message {} for {} with num_list {}".format(response, response_number, response_num_list))
 
         '''Make message'''
         outgoing_message = Message(From=SERVER_NUMBER,
