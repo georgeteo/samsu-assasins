@@ -9,6 +9,10 @@ import pytz
 from model.player import Player
 
 class Bomb(ndb.Model):
+    """
+    BOMB <location> <month> <date> <hour> <min>
+    """
+    
     attacker = ndb.StringProperty()
     place = ndb.StringProperty()
     time = ndb.DateTimeProperty()
@@ -18,11 +22,11 @@ class Bomb(ndb.Model):
     @staticmethod
     def handler(attacker, params):
         '''Validation'''
-        if attacker.role != "DEMO":
-            raise ActionError("ROLE", "DEMO")
-
         if attacker.state == "DEAD":
             raise ActionError("ME", "DEAD")
+
+        if attacker.role != "DEMO":
+            raise ActionError("ROLE", "DEMO")
 
         if datetime.now() < attacker.can_set_after:
             raise ActionError("BOMB", "")
@@ -77,8 +81,8 @@ class Bomb(ndb.Model):
 
         logging.info("BOMB: set for {} at {}".format(utc_dt, place))
 
-        return bomb.attacker, "Your bomb in {} will explode at {}".format(
-            bomb.place, chi_dt.isoformat(' '))
+        return [(bomb.attacker, "Your bomb in {} will explode at {}".format(
+            bomb.place, chi_dt.isoformat(' ')))]
 
     @staticmethod
     def reply_handler(action, response, from_):

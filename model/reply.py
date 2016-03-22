@@ -20,11 +20,12 @@ class Reply(object):
         if response != "Y" and response != "y" and response != "N" and response != "n":
             raise ActionError("REPLY", response)
 
-        if lookup.action == "KILL":
-            return Kill.reply_handler(lookup, response)
-        elif lookup.action == "BOMB":
-            return Bomb.reply_handler(lookup, response, From)
-        elif lookup.action == "DISARM":
+
+        if lookup.action == "DISARM":
             return Disarm.reply_handler(lookup, response)
         else:
-            raise ActionError("REPLY", response)
+            if lookup.action == "KILL":
+                return Kill.reply_handler(lookup, response)
+            elif lookup.action == "BOMB":
+                return Bomb.reply_handler(lookup, response, From)
+        raise ActionError("REPLY", response)

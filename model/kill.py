@@ -7,6 +7,10 @@ from datetime import datetime
 
 
 class Kill(object):
+    """
+    KILL <codename>
+    """
+
     @staticmethod
     def handler(attacker, params):
         logging.info("KILL start")
@@ -25,34 +29,36 @@ class Kill(object):
 
         logging.info("KILL finish")
 
-        return action.victim, "[REPLY {}] {} claimed to have killed you. \
-            Reply Y/N.".format(action_key.id(), attacker.realname)
+        return [(action.victim, "[REPLY {}] {} claimed to have killed you. " 
+            "Reply Y/N.".format(action_key.id(), attacker.realname))]
 
     @staticmethod
     def validate_kill(attacker, victim):
         my_team = Team.get_by_id(attacker.team)
         if not my_team:
-            logging.error("KILL: unable to get my team to validate kill")
+            logging.error("KILL: unable to get my team {} to validate kill"\
+                    .format(attacker.team))
             raise
-        my_target = my_team.kill
+        my_target = my_team.to_kill
         victim_team = Team.get_by_id(victim.team)
         if not victim_team:
             logging.error("KILL: unable to get vicitm team to validate kill")
             raise
+
         if victim_team.key.id() != my_target:
             logging.debug("KILL: target team != victim team")
             raise ActionError("TEAM", "")
 
         if attacker.state == "DEAD":
-            logging.debug("KILL: I am dead")
+            logging.debug("KILL: Attacker is DEAD")
             raise ActionError("ME", attacker.state)
 
         if victim.state != "ALIVE":
-            logging.debug("KILL: Victim is not alive")
+            logging.debug("KILL: Victim is DEAD")
             raise ActionError("THEM", victim.state)
 
         if victim.invul:
-            logging.debug("KILL: Victim is invul")
+            logging.debug("KILL: Victim is INVUL")
             raise ActionError("THEM", "INVUL")
 
         if attacker.disarm:

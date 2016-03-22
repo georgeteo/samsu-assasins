@@ -34,8 +34,9 @@ class Team(ndb.Model):
         medic
         demo
     Child: Player'''
-    kill = ndb.StringProperty(default="")
-    target = ndb.StringProperty(default="")
+    to_kill = ndb.StringProperty(default="")
+    target_of = ndb.StringProperty(default="")
     sniper = ndb.StringProperty(default="")
     medic = ndb.StringProperty(default="")
     demo = ndb.StringProperty(default="")
+    spy = ndb.StringProperty(default="")

@@ -1,0 +1,13 @@
+E
+======================================================================
+ERROR: Failure: OSError (No such file /Users/georgeteo/Coding/samsu-assasins/tests/2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/georgeteo/Coding/samsu-assasins/venv/lib/python2.7/site-packages/nose/failure.py", line 42, in runTest
+    raise self.exc_class(self.exc_val)
+OSError: No such file /Users/georgeteo/Coding/samsu-assasins/tests/2
+
+----------------------------------------------------------------------
+Ran 1 test in 0.168s
+
+FAILED (errors=1)

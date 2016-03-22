@@ -45,14 +45,7 @@ def twil():
 
     ''' Pass message into action builder.'''
     try:
-        response_to, response = CommandHandler.handler(message)
-        if response_to == "" and response == "":
-            return
-        if response_to == "*":
-            response_num_list = [key.id() for key in Player.query().fetch(keys_only=True)]
-        else:
-            response_num_list = [response_to]
-
+        response_list = CommandHandler.handler(message)
     except ActionError as message:
         logging.exception("Error {}".format(message))
         response_num_list = [from_]
@@ -62,20 +55,21 @@ def twil():
         response_num_list = [from_]
         response = "[ERR] Unknown Error"
 
-    for response_number in response_num_list:
-        logging.info("Making message {} for {} with num_list {}".format(response, response_number, response_num_list))
+    for response_num_list, response in response_list:
+        for response_number in response_num_list:
+            logging.info("Making message {} for {} with num_list {}".format(response, response_number, response_num_list))
 
-        '''Make message'''
-        outgoing_message = Message(From=SERVER_NUMBER,
-                                   To=response_number,
-                                   Body=response)
-        outgoing_message.put()
+            '''Make message'''
+            outgoing_message = Message(From=SERVER_NUMBER,
+                                       To=response_number,
+                                       Body=response)
+            outgoing_message.put()
 
-        '''Send message'''
-        client.messages.create(
-            to=response_number,
-            from_=SERVER_NUMBER,
-            body=response)
+            '''Send message'''
+            client.messages.create(
+                to=response_number,
+                from_=SERVER_NUMBER,
+                body=response)
 
     return log
 

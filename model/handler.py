@@ -5,11 +5,26 @@ from model.error import ActionError
 import logging
 from model.bomb import Bomb
 from model.disarm import Disarm
+from model.player import Player
 
 class CommandHandler(object):
 
     @staticmethod
     def handler(message):
+        responses = CommandHandler.inner_handler(message)
+        output_responses = []
+        for (response_to, response) in responses:
+            if response_to == "" and response == "":
+                break
+            if response_to == "*":
+                response_num_list = [key.id() for key in Player.query().fetch(keys_only=True)]
+            else:
+                response_num_list = [response_to]
+            output_responses.append((response_num_list, response))
+        return output_responses
+
+    @staticmethod
+    def inner_handler(message):
         action, params = CommandHandler.get_command(message.Body)
         attacker = Util.get_attacker(message.From)
 
