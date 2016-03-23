@@ -11,6 +11,7 @@ from model.player import Player
 class Bomb(ndb.Model):
     """
     BOMB <location> <month> <date> <hour> <min>
+    DEMO is allowed to reset a bomb as long as it has not yet exploded.
     """
     
     attacker = ndb.StringProperty()

@@ -30,7 +30,6 @@ appcfg.py update .
 ## Testing TODO
 1. Handler.py routing of each command + Error command
 3. REPLY.handler and subcommands
-5. Invul.handler and subcommands
 6. Disarm.handler and subcommands
 7. Action Error handling in Main.py
 8. Unknown Error handling in Main.py

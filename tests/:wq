@@ -9,7 +9,7 @@ class ActionError(Exception):
         elif self.error_type == "NAME":
             self.message = "Invalid name: {}".format(self.params)
         elif self.error_type == "TEAM":
-            self.message = "Invalid Team. You cannot do that action to someone on that team."
+            self.message = "Invalid Team. Can only do that to someone on the same team."
         elif self.error_type == "ME":
             self.message = "You are {}".format(params)
         elif self.error_type == "THEM":
@@ -25,7 +25,7 @@ class ActionError(Exception):
         elif self.error_type == "BOMB":
             self.message = "You cannot set the bomb at this time. Please wait until midnight."
         elif self.error_type == "INVUL":
-            self.message = "You cannot set invul at this time. Please wait until midnight."
+            self.message = "You cannot set invuln at this time. Please wait until midnight."
 
     def __str__(self):
         return repr(self.message)
