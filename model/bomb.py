@@ -105,11 +105,10 @@ class Bomb(ndb.Model):
             victim.state = "DEAD"
             victim.put()
 
-            return "*", "{} has been killed".format(victim.codename)
+            return [("*", "{} has been killed".format(victim.codename))]
 
         else:
             action_c.need_validation = True
             action_c.incorrect_kill = True
-            action_c.put()
-            return "", ""
+            return []
 

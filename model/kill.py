@@ -78,11 +78,10 @@ class Kill(object):
             victim.state = "DEAD"
             victim.put()
 
-            return "*", "{} has been killed".format(victim.codename)
+            return [("*", "{} has been killed".format(victim.codename))]
         else:
             action.need_validation = False
             action.incorrect_kill = False
             action.put()
-            return action.attacker, "Your victim claims that he/she was not killed.\
-                Please check that you have the correct codename"
-
+            return [(action.attacker, "Your victim claims that he/she was not "
+            "killed. Please check that you have the correct codename")]

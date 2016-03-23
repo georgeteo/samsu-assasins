@@ -2,6 +2,7 @@ from tests.fixture import AssassinsTestCase
 from model.kill import Kill
 from model.error import *
 import re
+from model.actions import Action
 
 import logging
 
@@ -71,3 +72,56 @@ class TestKill(AssassinsTestCase):
         with self.assertRaises(TeamError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "Invalid Team. You cannot do that action to someone on that team.")
+
+    """ Test Kill reply """
+    def test_kill_reply_Y(self):
+        """ Kill reply Y response """
+        action = Action()
+        action.victim = "+1"
+        action.put()
+
+        ret = Kill.reply_handler(action, "Y")
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0][0], "*")
+        self.assertEqual(ret[0][1], "p1a has been killed")
+        self.assertEqual(self.p1a.state, "DEAD")
+        
+    def test_kill_reply_y(self):
+        """ Kill reply y response """
+        action = Action()
+        action.victim = "+1"
+        action.put()
+
+        ret = Kill.reply_handler(action, "y")
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0][0], "*")
+        self.assertEqual(ret[0][1], "p1a has been killed")
+        self.assertEqual(self.p1a.state, "DEAD")
+        
+    def test_kill_reply_N(self):
+        """ Kill reply N response """
+        action = Action()
+        action.attacker = "+1"
+        action.victim = "+4"
+        action.put()
+
+        ret = Kill.reply_handler(action, "N")
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0][0], "+1")
+        self.assertEqual(ret[0][1], "Your victim claims that he/she was not "
+            "killed. Please check that you have the correct codename")
+        self.assertEqual(self.p2a.state, "ALIVE")
+    
+    def test_kill_reply_n(self):
+        """ Kill reply n response """
+        action = Action()
+        action.attacker = "+1"
+        action.victim = "+4"
+        action.put()
+
+        ret = Kill.reply_handler(action, "n")
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0][0], "+1")
+        self.assertEqual(ret[0][1], "Your victim claims that he/she was not "
+            "killed. Please check that you have the correct codename")
+        self.assertEqual(self.p2a.state, "ALIVE")

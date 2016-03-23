@@ -81,7 +81,66 @@ class TestBomb(AssassinsTestCase):
         Bomb.handler(attacker, params)
         self.assertEqual(len(self.bomb_queue), 1)
 
+    """ Test Bomb reply """
+    def test_bomb_reply_Y(self):
+        """ Bomb reply Y response """
+        action = Action()
+        action.attacker = "+1"
+        action.action = "BOMB"
+        action.victim = "*"
+        action.datetime = datetime.now()
+        action.place = "Place"
+        action.put()
 
+        ret = Bomb.reply_handler(action, "Y", self.p2a)
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0][0], "*")
+        self.assertEqual(ret[0][1], "p2a has been killed")
+        self.assertEqual(self.p2a.state, "DEAD")
+        
+    def test_bomb_reply_y(self):
+        """ Bomb reply y response """
+        action = Action()
+        action.attacker = "+1"
+        action.action = "BOMB"
+        action.victim = "*"
+        action.datetime = datetime.now()
+        action.place = "Place"
+        action.put()
+
+        ret = Bomb.reply_handler(action, "y", self.p2a)
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0][0], "*")
+        self.assertEqual(ret[0][1], "p2a has been killed")
+        self.assertEqual(self.p2a.state, "DEAD")
+        
+    def test_bomb_reply_N(self):
+        """ Bomb reply N response """
+        action = Action()
+        action.attacker = "+1"
+        action.action = "BOMB"
+        action.victim = "*"
+        action.datetime = datetime.now()
+        action.place = "Place"
+        action.put()
+
+        ret = Bomb.reply_handler(action, "N", self.p2a)
+        self.assertEqual(len(ret), 0)
+        self.assertEqual(self.p2a.state, "ALIVE")
+    
+    def test_bomb_reply_n(self):
+        """ Bomb reply n response """
+        action = Action()
+        action.attacker = "+1"
+        action.action = "BOMB"
+        action.victim = "*"
+        action.datetime = datetime.now()
+        action.place = "Place"
+        action.put()
+
+        ret = Bomb.reply_handler(action, "n", self.p2a)
+        self.assertEqual(len(ret), 0)
+        self.assertEqual(self.p2a.state, "ALIVE")
         
         
 
