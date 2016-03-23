@@ -1,7 +1,7 @@
 import logging
 from model.util import Util
 from model.player import Team, Player
-from model.error import ActionError
+from model.error import *
 from model.actions import Action
 from datetime import datetime
 
@@ -47,23 +47,23 @@ class Kill(object):
 
         if victim_team.key.id() != my_target:
             logging.debug("KILL: target team != victim team")
-            raise ActionError("TEAM", "")
+            raise TeamError
 
         if attacker.state == "DEAD":
             logging.debug("KILL: Attacker is DEAD")
-            raise ActionError("ME", attacker.state)
+            raise MeError(attacker.state)
 
         if victim.state != "ALIVE":
             logging.debug("KILL: Victim is DEAD")
-            raise ActionError("THEM", victim.state)
+            raise TargetError(victim.state)
 
         if victim.invul:
             logging.debug("KILL: Victim is INVUL")
-            raise ActionError("THEM", "INVUL")
+            raise TargetError("INVUL")
 
         if attacker.disarm:
             logging.debug("KILL: Attacker is DISARM")
-            raise ActionError("ME", "DISARM")
+            raise MeError("DISARM")
 
         logging.debug("KILL: kill validated")
 

@@ -1,6 +1,6 @@
 from model.player import Player
 import logging
-from model.error import ActionError
+from model.error import DbError
 import pytz
 from datetime import datetime, timedelta, date, time
 
@@ -22,7 +22,7 @@ class Util(object):
         if not victim:
             logging.error("Get Victim: victim {} not found".format(victim_name))
             logging.error("Database looks like: {}".format(Player.query().fetch()))
-            raise ActionError("NAME", victim_name)
+            raise DbError(victim_name)
         logging.info("Get Victim: victim {} found".format(victim_name))
         return victim
 
@@ -36,6 +36,7 @@ class Util(object):
 
     @staticmethod
     def next_day():
+        """ Return UTC time """
         chi_today = Util.utc_to_chi(datetime.utcnow()).date()
         chi_tomorrow = chi_today + timedelta(1)
         return datetime.combine(chi_tomorrow, time(6, 0, 0))

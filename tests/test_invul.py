@@ -2,6 +2,7 @@ from tests.fixture import AssassinsTestCase
 from model.invul import Invul
 from model.error import ActionError
 import re
+from model.util import Util
 
 import logging
 
@@ -12,9 +13,9 @@ class TestInvul(AssassinsTestCase):
         """ INVUL command must come from medic """
         medic = self.p1a
         params = ["p1c", "1", "1", "1", "1"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(MeError) as e:
             Invul.handler(medic, params)
-        self.assertEqual(e.exception.message, "You are not the MEDIC")
+        self.assertEqual(e.exception.message, "You are not MEDIC")
         self.assertEqual(len(self.invul_queue), 0)
 
     def test_invul_medic_not_alive(self):
@@ -23,7 +24,7 @@ class TestInvul(AssassinsTestCase):
         medic.state = "DEAD"
         medic.put()
         params = ["p1a", "1", "1", "1", "1"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(MeError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, "You are DEAD")
         self.assertEqual(len(self.invul_queue), 0)
@@ -35,7 +36,7 @@ class TestInvul(AssassinsTestCase):
         target.state = "DEAD"
         target.put()
         params = ["p1a", "1", "1", "1", "1"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(TargetError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, "Your target is DEAD")
         self.assertEqual(len(self.invul_queue), 0)
@@ -46,30 +47,33 @@ class TestInvul(AssassinsTestCase):
         medic.can_set_after = Util.next_day()
         medic.put()
         params = ["p1a", "1", "1", "1", "1"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(TimeError) as e:
             Invul.handler(medic, params)
-        self.assertEqual(e.exception.message, "You cannot set invul at this time. Please wait until midnight.")
+        self.assertEqual(e.exception.message, "You cannot set invul before time {}."\
+                .format(Util.utc_to_chi(medic.can_set_after).strftime("%m-%d %I:%M%p")))
         self.assertEqual(len(self.invul_queue), 0)
 
     def test_invul_error_time_before_now(self):
         """ MEDIC can only INVUL a time in the future """
         medic = self.p1c
-        tomorrow = Util.next_day()
-        params = ["p1a", str(tomorrow.month), str(tomorrow.day),\
-                str(tomorrow.hour), str(tomorrow.minute)]
-        with self.assertRaises(ActionError) as e:
+        now = Util.utc_to_chi(datetime.now()) - timedelta(hours=1)
+        params = ["p1a", str(now.month), str(now.day),\
+                str(now.hour), str(now.minute)]
+        with self.assertRaises(TimeError) as e:
             Invul.handler(medic, params)
-        self.assertEqual(e.exception.message, "You cannot set a time {} before current time {}".format(tomorrow, Util.utc_to_chi(datetime.now())))
+        self.assertEqual(e.exception.message, "You cannot set {} before time {}."\
+                .format(now.strftime("%m-%d %I:%M%p"),\
+                Util.utc_to_chi(datetime.now()).strftime("%m-%d %I:%M%p")))
         self.assertEqual(len(self.invul_queue), 0)
-
 
     def test_not_same_team(self):
         """ MEDIC can only INVUL same team """
         medic = self.p1c
         params = ["p2a", "1", "1", "1", "1"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(TeamError) as e:
             Invul.handler(medic, params)
-        self.assertEqual(e.exception.message, "Invalid Team. Can only do that to someone on the same team.") 
+        self.assertEqual(e.exception.message, \
+                "Invalid Team. You cannot do that action to someone on that team.")
         self.assertEqual(len(self.invul_queue), 0)
 
     def test_good_invul(self):

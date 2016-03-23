@@ -1,6 +1,6 @@
 from tests.fixture import AssassinsTestCase
 from model.kill import Kill
-from model.error import ActionError
+from model.error import *
 import re
 
 import logging
@@ -24,7 +24,7 @@ class TestKill(AssassinsTestCase):
         """ Good attacker dead target: p1a attacks p2b """
         attacker = self.p1a
         params = ["p2b"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(TargetError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "Your target is DEAD")
     
@@ -32,7 +32,7 @@ class TestKill(AssassinsTestCase):
         """ Good attacker invul target: p1a attacks p2c """
         attacker = self.p1a
         params = ["p2c"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(TargetError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "Your target is INVUL")
     
@@ -40,25 +40,17 @@ class TestKill(AssassinsTestCase):
         """ Disarm attacker good target: p1b attacks p2a """
         attacker = self.p1b
         params = ["p2a"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(MeError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "You are DISARM")
     
-    def test_disarm_attacker_bad_target(self):
-        """ Disarm attacker bad target: p1b attacks p2b """
-        attacker = self.p1b
-        params = ["p2b"]
-        with self.assertRaises(ActionError) as e:
-            Kill.handler(attacker, params)
-        self.assertEqual(e.exception.message, "You are DISARM")
-
     def test_dead_attacker_good_target(self):
         """ Dead attacker good target: p1a attack p2a """
         attacker = self.p1a
         attacker.state = "DEAD"
         attacker.put()
         params = ["p2a"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(MeError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "You are DEAD")
 
@@ -68,7 +60,7 @@ class TestKill(AssassinsTestCase):
         attacker.state = "DEAD"
         attacker.put()
         params = ["p2b"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(MeError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "You are DEAD")
 
@@ -76,6 +68,6 @@ class TestKill(AssassinsTestCase):
         """ Target is on the wrong team """
         attacker = self.p1a
         params = ["p3b"]
-        with self.assertRaises(ActionError) as e:
+        with self.assertRaises(TeamError) as e:
             Kill.handler(attacker, params)
         self.assertEqual(e.exception.message, "Invalid Team. You cannot do that action to someone on that team.")

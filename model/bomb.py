@@ -1,5 +1,5 @@
 from google.appengine.ext import ndb
-from model.error import ActionError
+from model.error import *
 from google.appengine.api import taskqueue
 from datetime import datetime
 import logging
@@ -7,6 +7,7 @@ from model.util import Util
 from model.actions import Action
 import pytz
 from model.player import Player
+import re
 
 class Bomb(ndb.Model):
     """
@@ -24,21 +25,21 @@ class Bomb(ndb.Model):
     def handler(attacker, params):
         '''Validation'''
         if attacker.state == "DEAD":
-            raise ActionError("ME", "DEAD")
+            raise MeError("DEAD")
 
         if attacker.role != "DEMO":
-            raise ActionError("ROLE", "DEMO")
+            raise MeError("not DEMO")
 
         if datetime.now() < attacker.can_set_after:
-            raise ActionError("BOMB", "")
+            raise TimeError("bomb", Util.utc_to_chi(attacker.can_set_after))
 
         if attacker.disarm:
-            raise ActionError("ME", "DISARM")
+            raise MeError("DISARM")
 
         ''' Parse place and time '''
+        if re.match(r"\w \d+ \d+ \d+ \d+", " ".join(params)):
+            raise CommandError("BOMB - ".format(" ".join(params)))
         place = params.pop(0)
-        if not place:
-            raise ActionError("LOCATION", "")
 
         central = pytz.timezone("US/Central")
         chi_dt = datetime(2016,
@@ -52,9 +53,9 @@ class Bomb(ndb.Model):
         logging.debug("UTC time: {}".format(utc_dt))
 
         if utc_dt < datetime.now():
-            cur_time = Util.utc_to_chi(datetime.now()).isoformat(' ')
+            cur_time = Util.utc_to_chi(datetime.now())
             logging.error("BOMB: trying to set time {} before now {} (UTC)".format(utc_dt.isoformat(' '), datetime.now().isoformat(' ')))
-            raise ActionError("TIME", [chi_dt, cur_time])
+            raise TimeError(chi_dt, cur_time)
 
         '''Make new bomb'''
         bomb = Bomb()
@@ -83,7 +84,7 @@ class Bomb(ndb.Model):
         logging.info("BOMB: set for {} at {}".format(utc_dt, place))
 
         return [(bomb.attacker, "Your bomb in {} will explode at {}".format(
-            bomb.place, chi_dt.isoformat(' ')))]
+            bomb.place, chi_dt.strftime("%m-%d %I:%M%p")))]
 
     @staticmethod
     def reply_handler(action, response, from_):

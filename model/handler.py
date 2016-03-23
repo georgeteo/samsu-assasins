@@ -1,7 +1,7 @@
 from model.reply import Reply
 from model.kill import Kill
 from model.util import Util
-from model.error import ActionError
+from model.error import CommandError
 import logging
 from model.bomb import Bomb
 from model.disarm import Disarm
@@ -40,7 +40,7 @@ class CommandHandler(object):
         elif action == "DISARM":
             return Disarm.handler(attacker, params)
         else:
-            raise ActionError("CMD", action)
+            raise CommandError(action)
 
     @staticmethod
     def get_command(body):
