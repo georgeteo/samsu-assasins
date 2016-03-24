@@ -46,7 +46,7 @@ def twil():
     ''' Pass message into action builder.'''
     try:
         response_list = CommandHandler.handler(message)
-    except ActionError as message:
+    except ActionError as message: # TODO: Update for new error types 
         logging.exception("Error {}".format(message))
         response_num_list = [from_]
         response = "[ERR] {}".format(message)
@@ -55,6 +55,7 @@ def twil():
         response_num_list = [from_]
         response = "[ERR] Unknown Error"
 
+    # TODO: Write tests for this part 
     for response_num_list, response in response_list:
         for response_number in response_num_list:
             logging.info("Making message {} for {} with num_list {}".format(response, response_number, response_num_list))
@@ -73,6 +74,7 @@ def twil():
 
     return log
 
+# TODO: From here down, not updated for new error types. Not tested. 
 @app.route('/bomb', methods=['POST'])
 def bomb_worker():
     ''' Get bomb id '''
