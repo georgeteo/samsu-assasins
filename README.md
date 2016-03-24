@@ -25,19 +25,19 @@ appcfg.py update .
 1. Unit test
 2. Spy Function
 3. Custom Control Panel
-4. Use Team
+5. Push team -- TODO Comment in reply.py
 
 ## Testing TODO
 1. Handler.py routing of each command + Error command
-3. REPLY.handler and subcommands
+3. REPLY.handler and subcommands -- Skeleton in test_reply.py
 7. Action Error handling in Main.py
 8. Unknown Error handling in Main.py
 9. Sending outoing messages to response num_list
 
 
-- Bomb worker
-- Invul worker
-- Disarm worker
+- Test Bomb worker
+- Test Invul worker
+- Test Disarm worker
 
 
 

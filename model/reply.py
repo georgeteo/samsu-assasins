@@ -23,6 +23,7 @@ class Reply(object):
         if lookup.action == "DISARM":
             return Disarm.reply_handler(lookup, response)
         else:
+            # TODO: Add logic for pushing team to next target 
             if lookup.action == "KILL":
                 return Kill.reply_handler(lookup, response)
             elif lookup.action == "BOMB":
