@@ -13,9 +13,18 @@ class TestBomb(AssassinsTestCase):
 
     def setUp(self):
         super(TestBomb, self).setUp()
-        test_dt = Util.utc_to_chi(datetime.now()) - timedelta(minutes=1)
+        test_dt = Util.utc_to_chi(datetime.now()) + timedelta(minutes=1)
         self.default_params = ["Here", str(test_dt.month), str(test_dt.day),\
                 str(test_dt.hour), str(test_dt.minute)]
+        
+        action = Action()
+        action.attacker = "+1"
+        action.action = "BOMB"
+        action.victim = "*"
+        action.datetime = datetime.now()
+        action.place = "Place"
+        action.put()
+        self.action = action
     
     def test_error_role_is_not_demo(self):
         """ Attacker is not role DEMO, Error."""
@@ -84,15 +93,7 @@ class TestBomb(AssassinsTestCase):
     """ Test Bomb reply """
     def test_bomb_reply_Y(self):
         """ Bomb reply Y response """
-        action = Action()
-        action.attacker = "+1"
-        action.action = "BOMB"
-        action.victim = "*"
-        action.datetime = datetime.now()
-        action.place = "Place"
-        action.put()
-
-        ret = Bomb.reply_handler(action, "Y", self.p2a)
+        ret = Bomb.reply_handler(self.action, "Y", self.p2a)
         self.assertEqual(len(ret), 1)
         self.assertEqual(ret[0][0], "*")
         self.assertEqual(ret[0][1], "p2a has been killed")
@@ -100,15 +101,7 @@ class TestBomb(AssassinsTestCase):
         
     def test_bomb_reply_y(self):
         """ Bomb reply y response """
-        action = Action()
-        action.attacker = "+1"
-        action.action = "BOMB"
-        action.victim = "*"
-        action.datetime = datetime.now()
-        action.place = "Place"
-        action.put()
-
-        ret = Bomb.reply_handler(action, "y", self.p2a)
+        ret = Bomb.reply_handler(self.action, "y", self.p2a)
         self.assertEqual(len(ret), 1)
         self.assertEqual(ret[0][0], "*")
         self.assertEqual(ret[0][1], "p2a has been killed")
@@ -116,29 +109,13 @@ class TestBomb(AssassinsTestCase):
         
     def test_bomb_reply_N(self):
         """ Bomb reply N response """
-        action = Action()
-        action.attacker = "+1"
-        action.action = "BOMB"
-        action.victim = "*"
-        action.datetime = datetime.now()
-        action.place = "Place"
-        action.put()
-
-        ret = Bomb.reply_handler(action, "N", self.p2a)
+        ret = Bomb.reply_handler(self.action, "N", self.p2a)
         self.assertEqual(len(ret), 0)
         self.assertEqual(self.p2a.state, "ALIVE")
     
     def test_bomb_reply_n(self):
         """ Bomb reply n response """
-        action = Action()
-        action.attacker = "+1"
-        action.action = "BOMB"
-        action.victim = "*"
-        action.datetime = datetime.now()
-        action.place = "Place"
-        action.put()
-
-        ret = Bomb.reply_handler(action, "n", self.p2a)
+        ret = Bomb.reply_handler(self.action, "n", self.p2a)
         self.assertEqual(len(ret), 0)
         self.assertEqual(self.p2a.state, "ALIVE")
         

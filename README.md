@@ -34,9 +34,10 @@ appcfg.py update .
 8. Unknown Error handling in Main.py
 9. Sending outoing messages to response num_list
 
-Bomb worker
-Invul worker
-Disarm worker
+
+- Bomb worker
+- Invul worker
+- Disarm worker
 
 
 

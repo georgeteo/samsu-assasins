@@ -9,10 +9,17 @@ import logging
 class TestInvul(AssassinsTestCase):
     """ Test Invul functionality """
 
+    def setUp(self):
+        super(TestInvul, self).setUp()
+        test_dt = Util.utc_to_chi(datetime.now()) + timedelta(minutes=1)
+        self.default_params = ["p1a", str(test_dt.month), str(test_dt.day),\
+                str(test_dt.hour), str(test_dt.minute)]
+
     def test_invul_not_medic(self):
         """ INVUL command must come from medic """
         medic = self.p1a
-        params = ["p1c", "1", "1", "1", "1"]
+        params = self.default_params 
+        params[0] = "p1c"
         with self.assertRaises(MeError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, "You are not MEDIC")
@@ -23,7 +30,7 @@ class TestInvul(AssassinsTestCase):
         medic = self.p1c
         medic.state = "DEAD"
         medic.put()
-        params = ["p1a", "1", "1", "1", "1"]
+        params = self.default_params
         with self.assertRaises(MeError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, "You are DEAD")
@@ -35,7 +42,7 @@ class TestInvul(AssassinsTestCase):
         target = self.p1a
         target.state = "DEAD"
         target.put()
-        params = ["p1a", "1", "1", "1", "1"]
+        params = self.default_params
         with self.assertRaises(TargetError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, "Your target is DEAD")
@@ -46,7 +53,7 @@ class TestInvul(AssassinsTestCase):
         medic = self.p1c
         medic.can_set_after = Util.next_day()
         medic.put()
-        params = ["p1a", "1", "1", "1", "1"]
+        params = self.default_params
         with self.assertRaises(TimeError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, "You cannot set invul before time {}."\
@@ -69,7 +76,7 @@ class TestInvul(AssassinsTestCase):
     def test_not_same_team(self):
         """ MEDIC can only INVUL same team """
         medic = self.p1c
-        params = ["p2a", "1", "1", "1", "1"]
+        params = self.default_params
         with self.assertRaises(TeamError) as e:
             Invul.handler(medic, params)
         self.assertEqual(e.exception.message, \
@@ -80,7 +87,6 @@ class TestInvul(AssassinsTestCase):
         """ GOOD test """
         medic = self.p1c
         now = Util.utc_to_chi(datetime.now())
-        params = ["p1a", str(now.month), str(now.day), \
-                str(now.hour + 1), str(now.minute)]
+        params = self.default_params
         Invul.handler(medic, params)
         self.assertEqual(len(self.invul_queue),1)
