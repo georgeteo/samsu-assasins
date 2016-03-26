@@ -9,8 +9,8 @@ from model.player import Player
 
 class CommandHandler(object):
 
-    @staticmethod
-    def handler(message):
+    @classmethod
+    def handler(cls, message):
         responses = CommandHandler.inner_handler(message)
         output_responses = []
         for (response_to, response) in responses:
@@ -23,8 +23,8 @@ class CommandHandler(object):
             output_responses.append((response_num_list, response))
         return output_responses
 
-    @staticmethod
-    def inner_handler(message):
+    @classmethod
+    def inner_handler(cls, message):
         action, params = CommandHandler.get_command(message.Body)
         attacker = Util.get_attacker(message.From)
 
@@ -42,8 +42,8 @@ class CommandHandler(object):
         else:
             raise CommandError(action)
 
-    @staticmethod
-    def get_command(body):
+    @classmethod
+    def get_command(cls, body):
         message_body = body.split()
         action = message_body.pop(0)
         params = message_body

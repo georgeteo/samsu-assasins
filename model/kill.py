@@ -11,8 +11,8 @@ class Kill(object):
     KILL <codename>
     """
 
-    @staticmethod
-    def handler(attacker, params):
+    @classmethod
+    def handler(cls, attacker, params):
         logging.info("KILL start")
 
         victim = Util.get_victim(params[0])
@@ -32,8 +32,8 @@ class Kill(object):
         return [(action.victim, "[REPLY {}] {} claimed to have killed you. " 
             "Reply Y/N.".format(action_key.id(), attacker.realname))]
 
-    @staticmethod
-    def validate_kill(attacker, victim):
+    @classmethod
+    def validate_kill(cls, attacker, victim):
         my_team = Team.get_by_id(attacker.team)
         if not my_team:
             logging.error("KILL: unable to get my team {} to validate kill"\
@@ -67,8 +67,8 @@ class Kill(object):
 
         logging.debug("KILL: kill validated")
 
-    @staticmethod
-    def reply_handler(action, response):
+    @classmethod
+    def reply_handler(cls, action, response):
         if response == "Y" or response == "y":
             action.need_validation = False
             action.incorrect_kill = False

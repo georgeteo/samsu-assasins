@@ -1,10 +1,19 @@
 from tests.fixture import AssassinsTestCase
 from model.Reply import Reply
+from mock import Mock
 
 class TestReply(AssassinsTestCase):
     """ Test for Reply.py """
+    def setUp(self):
+        super(TestReply, self).setUp()
+
+        action = Action()
+        self.ref = action.put()
+        self.action = action
+
     def test_invalid_ref_number(self):
         """ Invalid ref number, cannot find action """
+
         pass
 
     def test_invalid_response(self):

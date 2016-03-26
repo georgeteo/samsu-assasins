@@ -28,6 +28,9 @@ appcfg.py update .
 5. Push team -- TODO Comment in reply.py
 
 ## Testing TODO
+
+Make all static methods into instance methods. :(
+
 1. Handler.py routing of each command + Error command
 3. REPLY.handler and subcommands -- Skeleton in test_reply.py
 7. Action Error handling in Main.py -- TODO update error handling in '/' for new error types

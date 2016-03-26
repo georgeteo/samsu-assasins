@@ -3,12 +3,22 @@ from model.kill import Kill
 from model.error import *
 import re
 from model.actions import Action
+from datetime import datetime
 
 import logging
 
 class TestKill(AssassinsTestCase):
     """ Test Kill functionality.
         TODO: how to check state is correctly not changed? """
+    def setUp(self):
+        super(TestKill, self).setUp()
+        action = Action()
+        action.attacker = "+1"
+        action.action = "KILL"
+        action.victim = "+4"
+        action.datetime = datetime.now()
+        action.put()
+        self.action = action
 
     def test_good_attacker_good_target(self):
         """ Good attacker good target: p1a attacks p2a """
@@ -76,36 +86,23 @@ class TestKill(AssassinsTestCase):
     """ Test Kill reply """
     def test_kill_reply_Y(self):
         """ Kill reply Y response """
-        action = Action()
-        action.victim = "+1"
-        action.put()
-
-        ret = Kill.reply_handler(action, "Y")
+        ret = Kill.reply_handler(self.action, "Y")
         self.assertEqual(len(ret), 1)
         self.assertEqual(ret[0][0], "*")
-        self.assertEqual(ret[0][1], "p1a has been killed")
-        self.assertEqual(self.p1a.state, "DEAD")
+        self.assertEqual(ret[0][1], "p2a has been killed")
+        self.assertEqual(self.p2a.state, "DEAD")
         
     def test_kill_reply_y(self):
         """ Kill reply y response """
-        action = Action()
-        action.victim = "+1"
-        action.put()
-
-        ret = Kill.reply_handler(action, "y")
+        ret = Kill.reply_handler(self.action, "y")
         self.assertEqual(len(ret), 1)
         self.assertEqual(ret[0][0], "*")
-        self.assertEqual(ret[0][1], "p1a has been killed")
-        self.assertEqual(self.p1a.state, "DEAD")
+        self.assertEqual(ret[0][1], "p2a has been killed")
+        self.assertEqual(self.p2a.state, "DEAD")
         
     def test_kill_reply_N(self):
         """ Kill reply N response """
-        action = Action()
-        action.attacker = "+1"
-        action.victim = "+4"
-        action.put()
-
-        ret = Kill.reply_handler(action, "N")
+        ret = Kill.reply_handler(self.action, "N")
         self.assertEqual(len(ret), 1)
         self.assertEqual(ret[0][0], "+1")
         self.assertEqual(ret[0][1], "Your victim claims that he/she was not "
@@ -114,12 +111,7 @@ class TestKill(AssassinsTestCase):
     
     def test_kill_reply_n(self):
         """ Kill reply n response """
-        action = Action()
-        action.attacker = "+1"
-        action.victim = "+4"
-        action.put()
-
-        ret = Kill.reply_handler(action, "n")
+        ret = Kill.reply_handler(self.action, "n")
         self.assertEqual(len(ret), 1)
         self.assertEqual(ret[0][0], "+1")
         self.assertEqual(ret[0][1], "Your victim claims that he/she was not "

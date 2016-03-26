@@ -21,8 +21,8 @@ class Bomb(ndb.Model):
     trigger = ndb.BooleanProperty(default=False)
     deprecated = ndb.BooleanProperty(default=False)
 
-    @staticmethod
-    def handler(attacker, params):
+    @classmethod
+    def handler(cls, attacker, params):
         '''Validation'''
         if attacker.state == "DEAD":
             raise MeError("DEAD")
@@ -86,8 +86,8 @@ class Bomb(ndb.Model):
         return [(bomb.attacker, "Your bomb in {} will explode at {}".format(
             bomb.place, chi_dt.strftime("%m-%d %I:%M%p")))]
 
-    @staticmethod
-    def reply_handler(action, response, from_):
+    @classmethod
+    def reply_handler(cls, action, response, from_):
         # Deep copy bomb
         action_c = Action()
         action_c.attacker = action.attacker

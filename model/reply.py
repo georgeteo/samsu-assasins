@@ -9,8 +9,8 @@ from model.error import *
 
 
 class Reply(object):
-    @staticmethod
-    def handler(ref, params, From):
+    @classmethod
+    def handler(cls, ref, params, From):
         logging.debug("REPLY {}".format(ref))
         lookup = Action.get_by_id(int(ref))
         if not lookup:
