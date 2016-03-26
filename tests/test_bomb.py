@@ -83,13 +83,14 @@ class TestBomb(AssassinsTestCase):
         self.assertEqual(e.exception.message, "You are DISARM")
         self.assertEqual(len(self.bomb_queue), 0)
 
-    def good_bomb(self):
+    def test_good_bomb(self):
         """ Good attacker set good bomb. """
         attacker = self.p1a
         later = Util.utc_to_chi(datetime.now())
         params = self.default_params
         Bomb.handler(attacker, params)
-        self.assertEqual(len(self.bomb_queue), 1)
+        self.assertEqual(len(self.taskqueue_stub.get_filtered_tasks(\
+                queue_names='bomb')), 1)
 
     """ Test Bomb reply """
     def test_bomb_reply_Y(self):

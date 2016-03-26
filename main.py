@@ -156,6 +156,7 @@ def invul_worker():
     '''Target dead. Report back to medic'''
     target_num = inv.target
     target = Player.get_by_id(target_num)
+    medic = Player.get_by_id(inv.medic)
     if not target:
         logging.error("INV worker: cannot find target {}".format(target_num))
         return
@@ -183,8 +184,12 @@ def invul_worker():
         target.invul = True
         target.put()
 
-        response  = "You have been granted INVUL for 1 hour from {} to {}".format(
-            inv.start_time, inv.end_time)
+        medic.can_set_after = Util.next_day()
+        medic.put()
+
+        response  = "You have been granted INVUL for 1 hour from {} to {}".\
+                format(Util.utc_to_chi(inv.start_time).strftime("%m-%d %I:%M%p"),\
+                Util.utc_to_chi(inv.end_time).strftime("%m-%d %I:%M%p"))
         msg = Message(From=SERVER_NUMBER,
                       To=inv.target,
                       Body=response)
@@ -229,7 +234,7 @@ def disarm_worker():
         return "DISARM Worker: deprecated"
 
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    disarmed_player = Player.get_by_id(disarm.disarmed)
+    disarmed_player = Player.get_by_id(disarm.victim)
     disarmed_player.disarm = False
     disarm_player.put()
 
@@ -244,11 +249,10 @@ def disarm_worker():
                   Body=response)
     msg.put()
     client.messages.create(
-        to=disarm.disarmed,
+        to=disarm.victim,
         from_=SERVER_NUMBER,
         body=response)
     return "DISARM WORKER"
-
 
 @app.route("/revive")
 def revive():

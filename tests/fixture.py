@@ -18,12 +18,6 @@ class AssassinsTestCase(unittest.TestCase):
         ndb.get_context().clear_cache()
         self.testbed.init_taskqueue_stub(root_path=".")
         self.taskqueue_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
-        self.bomb_queue = self.taskqueue_stub.get_filtered_tasks(queue_names='bomb')
-        self.invul_queue = self.taskqueue_stub.get_filtered_tasks(queue_names='invul')
-        self.disarm_queue = self.taskqueue_stub.get_filtered_tasks(queue_names='disarm')
-
-
-
         # Setup fixture
         today = Util.next_day() - timedelta(days=1)
 

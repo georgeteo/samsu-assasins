@@ -1,10 +1,11 @@
 from tests.fixture import AssassinsTestCase
-from model.bomb import Bomb
+from model.disarm import Disarm
+from model.player import Player
 from model.error import *
 import re
 from model.util import Util
 from model.actions import Action
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import logging
 
@@ -57,24 +58,24 @@ class TestDisarm(AssassinsTestCase):
         self.assertEqual(1, len(ret))
         self.assertEqual("+1", ret[0][0])
         self.assertRegexpMatches(ret[0][1], \
-                r"\[REPLY \d*\] player2a claimed to have disarmed you. Reply Y\/N.",\
-                "Msg was: {}".format(ret[0][1]))
+                r"\[REPLY \d*\] player2a claimed to have disarm you. Reply Y\/N.")
 
     def test_reply_disarm_Y(self):
         """ Test disarm reply Y """
-        later = Util.utc_to_chi(action.datetime + timedelta(hours=1))
+        later = Util.utc_to_chi(self.action.datetime + timedelta(hours=1))
 
         ret = Disarm.reply_handler(self.action, "Y")
         self.assertEqual(1, len(ret))
         self.assertEqual(ret[0][0], "+1")
         self.assertEqual(ret[0][1], "You have been DISARM until {}".format(\
                 later.strftime("%m-%d %I:%M%p")))
+        self.assertEqual(len(self.taskqueue_stub.get_filtered_tasks(\
+                queue_names='disarm')), 1)
         self.assertEqual(self.p1a.disarm, True)
-        self.assertEqual(len(self.disarm_queue), 1)
 
     def test_reply_disarm_y(self):
         """ Test disarm reply y """
-        later = Util.utc_to_chi(action.datetime + timedelta(hours=1))
+        later = Util.utc_to_chi(self.action.datetime + timedelta(hours=1))
 
         ret = Disarm.reply_handler(self.action, "y")
         self.assertEqual(1, len(ret))
@@ -82,25 +83,28 @@ class TestDisarm(AssassinsTestCase):
         self.assertEqual(ret[0][1], "You have been DISARM until {}".format(\
                 later.strftime("%m-%d %I:%M%p")))
         self.assertEqual(self.p1a.disarm, True)
-        self.assertEqual(len(self.disarm_queue), 1)
+        self.assertEqual(len(self.taskqueue_stub.get_filtered_tasks(\
+                queue_names='disarm')), 1)
         
     def test_reply_disarm_N(self):
         """ Test disarm reply N """
-       ret = Disarm.reply_handler(self.action, "N")
-       self.assertEqual(1, len(ret))
-       self.assertEqual(ret[0][0], self.action.attacker)
-       self.assertEqual(ret[0][1], "Your DISARM target p1a claims he was not "
-               "disarmed by you.")
-       self.assertEqual(self.p1a.disarm, False)
-       self.assertEqual(len(self.disarm_queue), 0)
+        ret = Disarm.reply_handler(self.action, "N")
+        self.assertEqual(1, len(ret))
+        self.assertEqual(ret[0][0], self.action.attacker)
+        self.assertEqual(ret[0][1], "Your DISARM target claims he was not "
+                "disarmed by you.")
+        self.assertEqual(self.p1a.disarm, False)
+        self.assertEqual(len(self.taskqueue_stub.get_filtered_tasks(\
+                queue_names='disarm')), 0)
     
     def test_reply_disarm_n(self):
         """ Test disarm reply n """
-       ret = Disarm.reply_handler(self.action, "n")
-       self.assertEqual(1, len(ret))
-       self.assertEqual(ret[0][0], self.action.attacker)
-       self.assertEqual(ret[0][1], "Your DISARM target p1a claims he was not "
-               "disarmed by you.")
-       self.assertEqual(self.p1a.disarm, False)
-       self.assertEqual(len(self.disarm_queue), 0)
+        ret = Disarm.reply_handler(self.action, "n")
+        self.assertEqual(1, len(ret))
+        self.assertEqual(ret[0][0], self.action.attacker)
+        self.assertEqual(ret[0][1], "Your DISARM target claims he was not "
+                "disarmed by you.")
+        self.assertEqual(self.p1a.disarm, False)
+        self.assertEqual(len(self.taskqueue_stub.get_filtered_tasks(\
+                queue_names='disarm')), 0)
 

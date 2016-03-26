@@ -38,7 +38,7 @@ class Bomb(ndb.Model):
 
         ''' Parse place and time '''
         if re.match(r"\w \d+ \d+ \d+ \d+", " ".join(params)):
-            raise CommandError("BOMB - ".format(" ".join(params)))
+            raise CommandError("BOMB - {}".format(" ".join(params)))
         place = params.pop(0)
 
         central = pytz.timezone("US/Central")

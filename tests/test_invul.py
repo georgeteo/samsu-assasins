@@ -90,3 +90,4 @@ class TestInvul(AssassinsTestCase):
         params = self.default_params
         Invul.handler(medic, params)
         self.assertEqual(len(self.invul_queue),1)
+        # TODO: test reply string
