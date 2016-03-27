@@ -40,3 +40,39 @@ class Team(ndb.Model):
     medic = ndb.StringProperty(default="")
     demo = ndb.StringProperty(default="")
     spy = ndb.StringProperty(default="")
+
+    @classmethod 
+    def push(cls, team):
+        """ Returns push kill message or [] """
+
+        for player_id in get_players(team):
+            player = Player.get_by_id(player_id)
+            if player == "ALIVE": # if player is alive, no push
+                return []
+
+        # Else, all players on this team DEAD, push
+        aggressor_team = Team.get_by_id(team.target_of)
+        target_team = Team.get_by_id(team.to_kill)
+
+        aggressor_team.to_kill = target_team.id()
+        aggressor_team.put()
+
+        message = "Congratulations. Your next target is team {}:\n".format(\
+                target_team.id())
+        for target_id in get_players(target_team):
+            target_player = Player.get_by_id(target_id)
+            if target_player.state == "ALIVE":
+                message += "{} - {}\n".format(target_player.realname,\
+                        target_player.codename)
+
+        push_messages = []
+        for aggressor_id in get_players(aggressor_team):
+            push_messages.append((aggressor_id, message))
+
+        return push_messages
+
+
+    @classmethod
+    def get_players(cls, team):
+        output = [team.sniper, team.medic, team.demo, team.spy]
+        return [o for o in output if o != ""]

@@ -1,5 +1,5 @@
 from model.actions import Action
-from model.player import Player
+from model.player import Player, Team
 import logging
 from datetime import datetime
 from model.kill import Kill
@@ -23,9 +23,12 @@ class Reply(object):
         if lookup.action == "DISARM":
             return Disarm.reply_handler(lookup, response)
         else:
-            # TODO: Add logic for pushing team to next target 
+            output_msg = []
             if lookup.action == "KILL":
-                return Kill.reply_handler(lookup, response)
+                output_msg += Kill.reply_handler(lookup, response)
             elif lookup.action == "BOMB":
-                return Bomb.reply_handler(lookup, response, From)
+                output_msg += Bomb.reply_handler(lookup, response, From)
+            """ Generate push if necessary """
+            output_msg += Team.push(Team.get_by_id(From.team))
+            return output_msg
         raise ReplyError(response, ref)

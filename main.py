@@ -112,10 +112,12 @@ def bomb_worker():
     action.place = bomb.place
     action_key = action.put()
 
-    response_num_list = [key.id() for key in Player.query(Player.state.IN(["ALIVE", "DISARM"]) ).fetch(keys_only=True)]
+
+    # TODO: restrict to not INVUL
+    response_num_list = [key.id() for key in Player.query(Player.state.IN(["ALIVE"]) ).fetch(keys_only=True)]
     response = "[REPLY {}] {} has been bombed at {}. Reply Y if you were there.".format(
         action_key.id(), action.place,
-        Util.utc_to_chi(action.datetime.replace(tzinfo=pytz.utc)).isoformat(' '))
+        Util.utc_to_chi(action.datetime).strftime("%m-%d %I:%M%p"))
 
     for response_number in response_num_list:
         logging.info("Making message {} for {} with num_list {}".format(
@@ -241,11 +243,12 @@ def disarm_worker():
     disarm.deprecated = True
     disarm.put()
 
-    logging.info("DISARM Worker: Turning off disarmed state for {}".format(disarm.disarmed))
+    logging.info("DISARM Worker: Turning off disarmed state for {}".format(\
+            disarm.victim))
 
     response = "You are no longer DISARMED. Go ahead and kill people."
     msg = Message(From=SERVER_NUMBER,
-                  To=disarm.disarmed,
+                  To=disarm.victim, 
                   Body=response)
     msg.put()
     client.messages.create(
