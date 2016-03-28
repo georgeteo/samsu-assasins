@@ -3,7 +3,7 @@ from twilio.rest import TwilioRestClient
 from model.handler import CommandHandler
 from model.message import Message
 from model.error import ActionError
-from model.player import Player
+from model.player import Player, Team
 from model.actions import Action
 from model.bomb import Bomb
 import logging
@@ -257,17 +257,16 @@ def disarm_worker():
         body=response)
     return "DISARM WORKER"
 
-@app.route("/revive")
-def revive():
+@app.route("/admin/players", methods=['GET', 'POST'])
+def admin_players():
     players = Player.query().fetch()
-    for player in players:
-        player.state = "ALIVE"
-        player.put()
-    return "All players revived"
+    return render_template("players.html", players=players)
+    # TODO: link player objects to individual objects
 
-
-
-
+@app.route("/admin/teams", methods=['GET', 'POST'])
+def admin_teams():
+    teams = Team.query().fetch()
+    return render_template("teams.html", teams=teams)
 
 @app.errorhandler(404)
 def page_not_found(e):

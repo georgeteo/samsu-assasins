@@ -25,6 +25,8 @@ appcfg.py update .
 1. Unit test
 2. Spy Function -- cron job
 3. Custom Control Panel
+4. Push feature -- What if only one team left?
+5. People killed feature -- BOMB, KILL
 
 ## Testing TODO
 

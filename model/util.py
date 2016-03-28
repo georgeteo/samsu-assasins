@@ -40,4 +40,3 @@ class Util(object):
         chi_today = Util.utc_to_chi(datetime.utcnow()).date()
         chi_tomorrow = chi_today + timedelta(1)
         return datetime.combine(chi_tomorrow, time(6, 0, 0))
-

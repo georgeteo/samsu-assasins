@@ -23,7 +23,6 @@ class Player(ndb.Model):
     can_set_after = ndb.DateTimeProperty(default=datetime.min)
     item = ndb.IntegerProperty()
 
-
 class Team(ndb.Model):
     '''Team objectx
     Key: team_name

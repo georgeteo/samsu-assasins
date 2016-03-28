@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+  <table>
+    <tr>
+      <th> Real Name </th>
+      <th> Code Name </th>
+      <th> Phone Number </th>
+      <th> Team Name </th>
+      <th> Role </th>
+      <th> ALIVE/DEAD </th>
+      <th> Invul </th>
+      <th> Disarm </th>
+      <th> Can set after </th>
+      <th> Item </th>
+    </tr>
+  {% for player in players %}
+    <tr>
+        <td> player.realname </td>
+        <td> player.codename </td>
+        <td> player.key.id() </td>
+        <td> player.team </td>
+        <td> player.role </td>
+        <td> player.state </td>
+        <td> player.invul </td>
+        <td> palyer.disarm </td>
+        <td> player.can_set_after </td>
+        <td> player.item </td>
+    </tr>
+  {% endfor %}
+  </table>
+{% endblock %}
