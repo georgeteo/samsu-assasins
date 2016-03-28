@@ -12,6 +12,7 @@ from model.util import Util
 import pytz
 from google.appengine.api import taskqueue
 from model.disarm import Disarm
+from forms import PlayerForm, TeamForm
 
 app = Flask(__name__)
 
@@ -269,6 +270,16 @@ def admin_teams():
     teams = Team.query().fetch()
     print teams
     return render_template("teams.html", teams=teams)
+
+@app.route("/admin/form/new", methods=['GET', 'POST'])
+def player_form():
+    return render_template("new_player_form.html", playername = "New Player")
+
+@app.route("/admin/form/<string:name>", methods=['GET', 'POST'])
+def player_form(name):
+    player = Player.get_by_id(name)
+    form = PlayerForm(obj=player)
+    return render_template("player_form.html", playername = name, form=form)
 
 @app.route("/test/populateDB")
 def populate():
