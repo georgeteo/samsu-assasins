@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h2> Teams Console </h2>
+  <table class="centered highlight">
+    <tr>
+        <th style="text-align:center"> Team Name </th>
+        <th style="text-align:center"> To Kill </th>
+        <th style="text-align:center"> Target of </th>
+        <th style="text-align:center"> Sniper </th>
+        <th style="text-align:center"> Medic </th>
+        <th style="text-align:center"> Demo </th>
+        <th style="text-align:center"> Spy </th>
+    </tr>
+  {% for team in teams %}
+    <tr>
+        <td> {{ team.key.id() }} </td>
+        <td> {{ team.to_kill }} </td>
+        <td> {{ team.target_of }} </td>
+        <td> {{ team.sniper }} </td>
+        <td> {{ team.medic }} </td>
+        <td> {{ team.demo }} </td>
+        <td> {{ team.spy }} </td>
+    </tr>
+  {% endfor %}
+  </table>
+{% endblock %}

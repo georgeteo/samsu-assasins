@@ -1,13 +1,13 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 from twilio.rest import TwilioRestClient
 from model.handler import CommandHandler
 from model.message import Message
-from model.error import ActionError
+from model.error import *
 from model.player import Player, Team
 from model.actions import Action
 from model.bomb import Bomb
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from model.util import Util
 import pytz
 from google.appengine.api import taskqueue
@@ -46,7 +46,8 @@ def twil():
     ''' Pass message into action builder.'''
     try:
         response_list = CommandHandler.handler(message)
-    except ActionError as message: # TODO: Update for new error types 
+    except (CommandError, DbError, TeamError, MeError, TargetError, TimeError,\
+            ReplyError) as message: 
         logging.exception("Error {}".format(message))
         response_num_list = [from_]
         response = "[ERR] {}".format(message)
@@ -266,7 +267,67 @@ def admin_players():
 @app.route("/admin/teams", methods=['GET', 'POST'])
 def admin_teams():
     teams = Team.query().fetch()
+    print teams
     return render_template("teams.html", teams=teams)
+
+@app.route("/test/populateDB")
+def populate():
+    today = Util.next_day() - timedelta(days=1)
+
+    team1 = Team(id = "Team1", to_kill="Team2", target_of="Team3")
+    p1a = Player(id="+1", realname="player1a", codename="p1a",\
+       team="Team1", state="ALIVE", role="DEMO", can_set_after=today)
+    team1.demo = "+1"
+    p1a.put()
+    p1b = Player(id="+2", realname="player1b", codename="p1b",\
+       team="Team1", state="ALIVE", disarm=True, role="SNIPER",\
+       can_set_after=today)
+    team1.sniper="+2"
+    p1b.put()
+    p1c = Player(id="+3", realname="player1c", codename="p1c",\
+       team="Team1", state="ALIVE", role="MEDIC", can_set_after=today)
+    team1.medic="+3"
+    p1c.put()
+    team1.put()
+
+    # Make Team 2 and populate with player 2a, 2b, 2c.
+    # p2a is ALIVE
+    # p2b is DEAD
+    # p2c is INVUL
+    team2 = Team(id="Team2", to_kill="Team3", target_of="Team1")
+    p2a = Player(id="+4", realname="player2a", codename="p2a",\
+       team="Team2", state="ALIVE", role="DEMO", can_set_after=today)
+    team2.demo = "+4"
+    p2a.put()
+    p2b = Player(id="+5", realname="player2b", codename="p2b",\
+       team="Team2", state="DEAD", role="SNIPER", can_set_after=today)
+    team2.sniper="+5"
+    p2b.put()
+    p2c = Player(id="+6", realname="player2c", codename="p2c",\
+       team="Team2", state="ALIVE", invul=True, role="MEDIC",\
+       can_set_after=today)
+    team2.medic="+6"
+    p2c.put()
+    team2.put()
+    
+    # Make Team 3 and populate with player 3a, 3b, 3c.
+    team3 = Team(id="Team3", to_kill="Team1", target_of="Team2")
+    p3a = Player(id="+7", realname="player3a", codename="p3a",\
+       team="Team3", state="ALIVE", role="DEMO", can_set_after=today)
+    team3.demo = "+7"
+    p3a.put()
+    p3b = Player(id="+8", realname="player3b", codename="p3b",\
+       team="Team3", state="ALIVE", role="SPY", can_set_after=today)
+    team3.sniper="+8"
+    p3b.put()
+    p3c = Player(id="+9", realname="player3c", codename="p3c",\
+       team="Team3", state="ALIVE", role="MEDIC", can_set_after=today)
+    team3.medic="+9"
+    p3c.put()
+    team3.put()
+
+    return "Players/Team put"
+
 
 @app.errorhandler(404)
 def page_not_found(e):
