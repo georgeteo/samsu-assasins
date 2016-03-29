@@ -16,7 +16,11 @@
     </tr>
   {% for player in players %}
     <tr>
-        <td> {{ player.realname }} </td>
+        <td> 
+          <a href={{url_for("player_form", name=player.key.id())}}>
+            {{ player.realname }} 
+          </a>
+        </td>
         <td> {{ player.codename }} </td>
         <td> {{ player.key.id() }} </td>
         <td> {{ player.team }} </td>
@@ -25,7 +29,11 @@
         <td> {{ player.invul }} </td>
         <td> {{ player.disarm }} </td>
         <td> {{ player.can_set_after }} </td>
-        <td> {{ player.item }} </td>
+        <td> 
+          <a href={{url_for("item_form", item_pair=(player.item, player.role))}}>
+            {{ player.item }}
+          </a>
+        </td>
     </tr>
   {% endfor %}
   </table>

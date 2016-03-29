@@ -1,19 +1,19 @@
 from flask import Flask
 from flask_wtf import Form
-import wtforms
 from wtforms.fields import (StringField, BooleanField, DateTimeField, IntegerField, SubmitField)
+from wtforms.widgets import CheckboxInput
 
 class PlayerForm(Form):
-    team = StringField("Team")
+    team = StringField(label="Team")
     realname = StringField("Real Name")
     codename = StringField("Code Name")
     state = StringField("State")
-    invul = BooleanField("Invul")
-    disarm = BooleanField("Disarm")
+    invul = StringField("Invul")
+    disarm = StringField("Disarm")
     role = StringField("Role")
-    can_set_after = DateTimeField("Can set after")
-    item = IntegerField("Item")
-    submit = SubmitField("Create")
+    can_set_after = StringField("Can set after")
+    item = StringField("Item")
+    submit = SubmitField("Submit")
 
 
 class TeamForm(Form):
@@ -23,4 +23,27 @@ class TeamForm(Form):
     medic = StringField("Medic")
     demo = StringField("Demo")
     spy = StringField("Spy")
-    submit = SubmitField("Create")
+    submit = SubmitField("Submit")
+
+class BombForm(Form):
+    attacker = StringField("Attacker")
+    place = StringField("Place")
+    time = StringField("Time")
+    trigger = StringField("Trigger")
+    deprecated = StringField("Deprecated")
+
+class InvulForm(Form):
+   medic = StringField("Medic")
+   target = StringField("Target")
+   start_time = StringField("Start Time")
+   end_time = StringField("End Time")
+   in_effect = StringField("In Effect")
+   deprecated = StringField("Deprecated")
+
+class DisarmForm(Form):
+    attacker = StringField("Attacker")
+    victim = StringField("Victim")
+    startime = StringField("Start Time")
+    endtime = StringField("End Time")
+    deprecated = StringField("Deprecated")
+    

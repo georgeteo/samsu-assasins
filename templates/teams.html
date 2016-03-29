@@ -13,13 +13,41 @@
     </tr>
   {% for team in teams %}
     <tr>
-        <td> {{ team.key.id() }} </td>
-        <td> {{ team.to_kill }} </td>
-        <td> {{ team.target_of }} </td>
-        <td> {{ team.sniper }} </td>
-        <td> {{ team.medic }} </td>
-        <td> {{ team.demo }} </td>
-        <td> {{ team.spy }} </td>
+        <td> 
+          <a href={{url_for("team_form", name=team.key.id())}}>
+            {{ team.key.id() }}
+          </a>  
+        </td>
+        <td> 
+          <a href={{url_for("team_form", name=team.to_kill)}}>
+            {{ team.to_kill }} 
+          </a>
+        </td>
+        <td> 
+          <a href={{url_for("team_form", name=team.target_of)}}>
+            {{ team.target_of }} 
+          </a>
+        </td>
+        <td> 
+          <a href={{url_for("player_form", name=team.sniper)}}>
+            {{ team.sniper }} 
+          </a>
+        </td>
+        <td> 
+          <a href={{url_for("player_form", name=team.medic)}}>
+            {{ team.medic }} 
+          </a>
+        </td>
+        <td>
+          <a href={{url_for("player_form", name=team.demo)}}>
+            {{ team.demo }} 
+          </a>
+        </td>
+        <td>
+          <a href={{url_for("player_form", name=team.spy)}}>
+            {{ team.spy }} 
+          </a>
+        </td>
     </tr>
   {% endfor %}
   </table>

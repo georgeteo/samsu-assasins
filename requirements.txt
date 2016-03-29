@@ -1,6 +1,7 @@
 appnope==0.1.0
 decorator==4.0.9
 Flask==0.10.1
+Flask-Material==0.1.1
 Flask-WTF==0.12
 funcsigs==0.4
 gnureadline==6.3.3

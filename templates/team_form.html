@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% import "material/utils.html" as util %}
+{% import "material/wtf.html" as wtf %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col s12">
+      {{ util.card(teamname, wtf.quick_form(form) )}}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -13,8 +13,15 @@ import pytz
 from google.appengine.api import taskqueue
 from model.disarm import Disarm
 from forms import PlayerForm, TeamForm
+from flask_wtf.csrf import CsrfProtect
+from flask_material import Material  
+
 
 app = Flask(__name__)
+Material(app)  
+app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+csrf = CsrfProtect()
+csrf.init_app(app)
 
 ACCOUNT_SID = "AC04675359e5f5e5ca433a2a5c17e9ddf6"
 AUTH_TOKEN = "ea3bc3ef80b8a7283d26eb94426518c8"
@@ -271,15 +278,54 @@ def admin_teams():
     print teams
     return render_template("teams.html", teams=teams)
 
-@app.route("/admin/form/new", methods=['GET', 'POST'])
-def player_form():
-    return render_template("new_player_form.html", playername = "New Player")
+@app.route("/admin/new_player", methods=['GET', 'POST'])
+def new_player_form():
+    form = PlayerForm()
+    return render_template("player_form.html", playername="New Player", form=form)
 
-@app.route("/admin/form/<string:name>", methods=['GET', 'POST'])
+@app.route("/admin/players/<name>/edit", methods=['GET', 'POST'])
 def player_form(name):
     player = Player.get_by_id(name)
     form = PlayerForm(obj=player)
-    return render_template("player_form.html", playername = name, form=form)
+    if form.validate_on_submit():
+        print form
+        return "FOO"
+    return render_template("player_form.html", playername=name, form=form)
+
+@app.route("/admin/teams/<name>/edit", methods=['GET', 'POST'])
+def team_form(name):
+    team = Team.get_by_id(name)
+    form = TeamForm(obj=team)
+    return render_template("team_form.html", teamname=name, form=form)
+
+@app.route("/admin/new_team", methods=['GET', 'POST'])
+def new_team_form(name):
+    form = TeamForm()
+    return render_template("team_form.html", teamname=name, form=form)
+
+@app.route("/admin/<item_pair>", methods=['GET', 'POST'])
+def item_form(item_pair):
+    item = item_pair[0]
+    item_type = item_pair[1]
+    
+    if item == None:
+        return "Item of None Type"
+    if item_type == "INVUL":
+        if item != None:
+            form = InvulForm(obj=item)
+        else:
+            form = InvulForm()
+    elif item_type == "DISARM":
+        if item != None:
+            form = DisarmForm(obj=item)
+        else:
+            form = DisarmForm()
+    elif item_type == "BOMB":
+        if item != None:
+            form = BombForm(obj=item)
+        else:
+            form = BombForm()
+    return render_template("item_form.html", name=name, form=form)
 
 @app.route("/test/populateDB")
 def populate():
@@ -302,8 +348,7 @@ def populate():
     team1.put()
 
     # Make Team 2 and populate with player 2a, 2b, 2c.
-    # p2a is ALIVE
-    # p2b is DEAD
+    # p2a is ALIVE p2b is DEAD
     # p2c is INVUL
     team2 = Team(id="Team2", to_kill="Team3", target_of="Team1")
     p2a = Player(id="+4", realname="player2a", codename="p2a",\
