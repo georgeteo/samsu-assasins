@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template
+from google.appengine.ext import ndb
 from twilio.rest import TwilioRestClient
 from model.handler import CommandHandler
 from model.message import Message
@@ -266,6 +267,32 @@ def disarm_worker():
         body=response)
     return "DISARM WORKER"
 
+@app.route('/spy')
+def spy():
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+
+    ''' Get all ALIVE spies '''
+    alive_spies = Player.query(ndb.AND(Player.state == "ALIVE",\
+            Player.role == "SPY")).fetch()
+
+    ''' For each spy, make and send hint '''
+    for spy in alive_spies:
+        if spy.state == "DEAD":
+            continue
+        response = Player.spy_hint(spy)
+        msg = Message(From=SERVER_NUMBER,
+                      To=spy.key.id(), 
+                      Body=response)
+        msg.put()
+        client.messages.create(
+            to=spy.key.id(),
+            from_=SERVER_NUMBER,
+            body=response)
+
+    logging.info("SPY CRON: completed send to {}".format(alive_spies))
+    return "Ok"
+    
+
 @app.route("/admin/players", methods=['GET', 'POST'])
 def admin_players():
     players = Player.query().fetch()
@@ -384,6 +411,13 @@ def populate():
 
     return "Players/Team put"
 
+@app.route("/test/whspy")
+def wh_spy():
+    wh = Player.get_by_id("+13127310539")
+    wh.role = "SPY"
+    wh.state = "ALIVE"
+    wh.put()
+    return "WH is a {} and {}".format(wh.role, wh.state)
 
 @app.errorhandler(404)
 def page_not_found(e):

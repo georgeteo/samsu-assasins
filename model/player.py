@@ -1,6 +1,6 @@
 from google.appengine.ext import ndb
 from datetime import datetime
-
+import random
 
 class Player(ndb.Model):
     '''Pllayer object is child of a Team object.
@@ -22,6 +22,20 @@ class Player(ndb.Model):
     role = ndb.StringProperty()
     can_set_after = ndb.DateTimeProperty(default=datetime.min)
     item = ndb.IntegerProperty()
+
+    @classmethod
+    def spy_hint(spy):
+        ''' Make spy hint '''
+        random_attackers = Player.query(Player.team != spy.team).fetch()
+        one_attacker = random.choice(random_attackers)
+        attacker_team = Team.get_by_id(one_attacker.team)
+        alive_targets = Player.query(ndb.AND(Player.team == attacker_team.to_kill,\
+                Player.state == "ALIVE")).fetch()
+        one_target = random.choice(alive_targets)
+        msg = "SPY: {} wants to kill {}.".format(one_attacker.realname,\
+                one_target.realname)
+        return msg
+
 
 class Team(ndb.Model):
     '''Team objectx

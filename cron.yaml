@@ -1,0 +1,4 @@
+cron:
+- description: daily spy message
+  url: /spy
+  schedule: every day 05:00
