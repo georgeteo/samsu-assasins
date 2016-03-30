@@ -24,7 +24,7 @@ class Player(ndb.Model):
     item = ndb.IntegerProperty()
 
     @classmethod
-    def spy_hint(spy):
+    def spy_hint(cls, spy):
         ''' Make spy hint '''
         random_attackers = Player.query(Player.team != spy.team).fetch()
         one_attacker = random.choice(random_attackers)
