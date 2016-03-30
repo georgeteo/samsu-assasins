@@ -11,7 +11,7 @@ class Util(object):
         if not attacker:
             logging.error("Get Attacker: attacker number {} not found in \
                           get_attacker()".format(attacker_number))
-            raise
+            raise DbError(attacker_number)
         logging.info("Get Attacker: attacker {} found".format(
             attacker.realname))
         return attacker

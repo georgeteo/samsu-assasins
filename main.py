@@ -21,25 +21,19 @@ from flask_material import Material
 app = Flask(__name__)
 Material(app)  
 app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
-csrf = CsrfProtect()
-csrf.init_app(app)
 
 ACCOUNT_SID = "AC04675359e5f5e5ca433a2a5c17e9ddf6"
 AUTH_TOKEN = "ea3bc3ef80b8a7283d26eb94426518c8"
-SERVER_NUMBER = "+13126989087"
+SERVER_NUMBER = "+17735701611"
 WEI_HAN = "+13127310539"
 
-@app.route('/')
-def index():
-    return "Welcome to SAMSU assassins. The site is up and working.\
-        Have a nice day."
+@app.route('/', methods=['GET', 'POST'])
 
-@app.route('/twil', methods=['POST'])
 def twil():
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     from_ = request.form.get("From", WEI_HAN)
     body = request.form.get("Body", default="")
-    picture = request.form.get("Picture", default="")
+    picture = request.form.get("MediaUrl{1}", default="")
     message_id = request.form.get("MessageSid", default="")
 
     log = "IN: MessageSid = {}, From = {}, Body = {}".format(message_id, from_, body)
@@ -53,6 +47,7 @@ def twil():
     message.put()
 
     ''' Pass message into action builder.'''
+    response_list = []
     try:
         response_list = CommandHandler.handler(message)
     except (CommandError, DbError, TeamError, MeError, TargetError, TimeError,\
@@ -60,10 +55,12 @@ def twil():
         logging.exception("Error {}".format(message))
         response_num_list = [from_]
         response = "[ERR] {}".format(message)
+        response_list = [(response_num_list, response)]
     except:
         logging.exception("Unknown Error")
         response_num_list = [from_]
         response = "[ERR] Unknown Error"
+        response_list = [(response_num_list, response)]
 
     # TODO: Write tests for this part 
     for response_num_list, response in response_list:
@@ -82,7 +79,8 @@ def twil():
                 from_=SERVER_NUMBER,
                 body=response)
 
-    return log
+    return "Welcome to SAMSU assassins. The site is up and working.\
+        Have a nice day."
 
 # TODO: From here down, not updated for new error types. Not tested. 
 @app.route('/bomb', methods=['POST'])
