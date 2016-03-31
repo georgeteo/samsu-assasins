@@ -1,6 +1,7 @@
 from google.appengine.ext import ndb
 from datetime import datetime
 import random
+import logging
 
 class Player(ndb.Model):
     '''Pllayer object is child of a Team object.
