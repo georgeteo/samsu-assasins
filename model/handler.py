@@ -7,6 +7,8 @@ from model.bomb import Bomb
 from model.disarm import Disarm
 from model.player import Player
 
+WEI_HAN = "+13127310539"
+
 class CommandHandler(object):
 
     @classmethod
@@ -39,6 +41,14 @@ class CommandHandler(object):
             return Invul.handler(attacker, params)
         elif action == "DISARM":
             return Disarm.handler(attacker, params)
+        elif action == "SNIPE":
+            if message.From != WEI_HAN:
+                raise CommandError(action)
+            attacker = Player.query(Player.codename == params[0]).get()
+            if attacker == None:
+                raise DbError(params[0])
+            return Snipe.handler(attacker, params[1])
+
         else:
             raise CommandError(action)
 

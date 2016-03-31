@@ -48,7 +48,7 @@ def twil():
 
     ''' Pass message into action builder.'''
     response_list = []
-    try:
+    try: # TODO: Move try, except into CommandHandler
         response_list = CommandHandler.handler(message)
     except (CommandError, DbError, TeamError, MeError, TargetError, TimeError,\
             ReplyError) as message: 
