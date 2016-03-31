@@ -16,6 +16,7 @@ from model.disarm import Disarm
 from forms import PlayerForm, TeamForm
 from flask_wtf.csrf import CsrfProtect
 from flask_material import Material  
+from random import shuffle
 
 
 app = Flask(__name__)
@@ -289,68 +290,122 @@ def spy():
 
     logging.info("SPY CRON: completed send to {}".format(alive_spies))
     return "Ok"
-    
 
-@app.route("/admin/players", methods=['GET', 'POST'])
-def admin_players():
-    players = Player.query().fetch()
-    return render_template("players.html", players=players)
-    # TODO: link player objects to individual objects
-
-@app.route("/admin/teams", methods=['GET', 'POST'])
-def admin_teams():
+@app.route('/start')
+def start():
     teams = Team.query().fetch()
-    print teams
-    return render_template("teams.html", teams=teams)
+    shuffle(teams)
+    for j, team in enumerate(teams):
+        i = j - 1
+        if j == len(teams) - 1:
+            k = 0
+        else:
+            k = j + 1
+        
+        team.to_kill = teams[k].key.id()
+        team.target_of = teams[i].key.id()
+        team.put()
 
-@app.route("/admin/new_player", methods=['GET', 'POST'])
-def new_player_form():
-    form = PlayerForm()
-    return render_template("player_form.html", playername="New Player", form=form)
-
-@app.route("/admin/players/<name>/edit", methods=['GET', 'POST'])
-def player_form(name):
-    player = Player.get_by_id(name)
-    form = PlayerForm(obj=player)
-    if form.validate_on_submit():
-        print form
-        return "FOO"
-    return render_template("player_form.html", playername=name, form=form)
-
-@app.route("/admin/teams/<name>/edit", methods=['GET', 'POST'])
-def team_form(name):
-    team = Team.get_by_id(name)
-    form = TeamForm(obj=team)
-    return render_template("team_form.html", teamname=name, form=form)
-
-@app.route("/admin/new_team", methods=['GET', 'POST'])
-def new_team_form(name):
-    form = TeamForm()
-    return render_template("team_form.html", teamname=name, form=form)
-
-@app.route("/admin/<item_pair>", methods=['GET', 'POST'])
-def item_form(item_pair):
-    item = item_pair[0]
-    item_type = item_pair[1]
+        team_start(team, teams[k])
     
-    if item == None:
-        return "Item of None Type"
-    if item_type == "INVUL":
-        if item != None:
-            form = InvulForm(obj=item)
-        else:
-            form = InvulForm()
-    elif item_type == "DISARM":
-        if item != None:
-            form = DisarmForm(obj=item)
-        else:
-            form = DisarmForm()
-    elif item_type == "BOMB":
-        if item != None:
-            form = BombForm(obj=item)
-        else:
-            form = BombForm()
-    return render_template("item_form.html", name=name, form=form)
+    return " -> ".join([team.key.id() for team in teams])
+
+def team_start(team, target_team):
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+    message = "Welcome to SAMSU assassins 2016. Your target is team {}:\n".\
+            format(target_team.key.id())
+    target_team = [target_team.sniper, target_team.medic, target_team.demo, target_team.spy]
+    
+    for target in target_team:
+        if target == "":
+            continue
+        target_player = Player.get_by_id(target)
+        message += "{} - {}".format(target_player.realname, target_player.codename)
+
+    team_players = [team.sniper, team.medic, team.demo, team.spy]
+    for p in team_players:
+        if p == "":
+            continue
+        
+        msg = Message(From=SERVER_NUMBER,
+                      To=p,
+                      Body=message)
+        msg.put()
+        client.messages.create(
+            to=p,
+            from_=SERVER_NUMBER,
+            body=message)
+
+
+
+        
+
+
+
+    
+    
+
+# DEPRECATED
+# @app.route("/admin/players", methods=['GET', 'POST'])
+# def admin_players():
+#     players = Player.query().fetch()
+#     return render_template("players.html", players=players)
+#     # TODO: link player objects to individual objects
+# 
+# @app.route("/admin/teams", methods=['GET', 'POST'])
+# def admin_teams():
+#     teams = Team.query().fetch()
+#     print teams
+#     return render_template("teams.html", teams=teams)
+# 
+# @app.route("/admin/new_player", methods=['GET', 'POST'])
+# def new_player_form():
+#     form = PlayerForm()
+#     return render_template("player_form.html", playername="New Player", form=form)
+# 
+# @app.route("/admin/players/<name>/edit", methods=['GET', 'POST'])
+# def player_form(name):
+#     player = Player.get_by_id(name)
+#     form = PlayerForm(obj=player)
+#     if form.validate_on_submit():
+#         print form
+#         return "FOO"
+#     return render_template("player_form.html", playername=name, form=form)
+# 
+# @app.route("/admin/teams/<name>/edit", methods=['GET', 'POST'])
+# def team_form(name):
+#     team = Team.get_by_id(name)
+#     form = TeamForm(obj=team)
+#     return render_template("team_form.html", teamname=name, form=form)
+# 
+# @app.route("/admin/new_team", methods=['GET', 'POST'])
+# def new_team_form(name):
+#     form = TeamForm()
+#     return render_template("team_form.html", teamname=name, form=form)
+# 
+# @app.route("/admin/<item_pair>", methods=['GET', 'POST'])
+# def item_form(item_pair):
+#     item = item_pair[0]
+#     item_type = item_pair[1]
+#     
+#     if item == None:
+#         return "Item of None Type"
+#     if item_type == "INVUL":
+#         if item != None:
+#             form = InvulForm(obj=item)
+#         else:
+#             form = InvulForm()
+#     elif item_type == "DISARM":
+#         if item != None:
+#             form = DisarmForm(obj=item)
+#         else:
+#             form = DisarmForm()
+#     elif item_type == "BOMB":
+#         if item != None:
+#             form = BombForm(obj=item)
+#         else:
+#             form = BombForm()
+#     return render_template("item_form.html", name=name, form=form)
 
 @app.route("/test/populateDB")
 def populate():
