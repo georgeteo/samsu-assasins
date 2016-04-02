@@ -48,7 +48,15 @@ class CommandHandler(object):
             if attacker == None:
                 raise DbError(params[0])
             return Snipe.handler(attacker, params[1])
-
+        elif action == "HELP":
+            msg = "Guide for SAMSU Assassins:\n"
+            msg += "KILL <target codename>\n"
+            msg += "BOMB <place> <month> <date> <hour> <min>\n"
+            msg += "INVUL <target codename> <month> <date> <hour> <min>\n"
+            msg += "DISARM <target codename>\n"
+            msg += "SNIPE - send message and picture to {}\n".format(WEI_HAN)
+            msg += "REPLY - [REPLY <number>] Y or [REPLY <number>] N"
+            return [(attacker.key.id(), msg)]
         else:
             raise CommandError(action)
 
