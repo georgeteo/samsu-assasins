@@ -46,7 +46,7 @@ class Kill(object):
             raise
 
         if victim_team.key.id() != my_target:
-            logging.debug("KILL: target team != victim team")
+            logging.debug("KILL: target team {} != victim team {}".format(victim_team.key.id(), my_target))
             raise TeamError
 
         if attacker.state == "DEAD":
@@ -65,18 +65,25 @@ class Kill(object):
             logging.debug("KILL: Attacker is DISARM")
             raise MeError("DISARM")
 
-        logging.debug("KILL: kill validated")
+        logging.info("KILL: kill validated")
 
     @classmethod
     def reply_handler(cls, action, response):
         if response == "Y" or response == "y":
             action.need_validation = False
             action.incorrect_kill = False
-            action.put()
+            action_key = action.put()
 
             victim = Player.get_by_id(action.victim)
             victim.state = "DEAD"
+            victim.killed_by = action_key.key.id()
             victim.put()
+
+            attacker = Player.get_by_id(action.attacker)
+            attacker.killed.append(victim.realname)
+            attacker.put()
+
+
 
             return [("*", "{} has been killed".format(victim.codename))]
         else:

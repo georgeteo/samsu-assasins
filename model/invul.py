@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from model.error import *
 from google.appengine.api import taskqueue
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from model.util import Util
 from model.actions import Action
@@ -42,9 +42,9 @@ class Invul(ndb.Model):
 
         chi_start_time = datetime(year=2016, month=int(params[0]),\
                 day=int(params[1]), hour=int(params[2]),\
-                minute=int([3]))
+                minute=int(params[3]))
         utc_start_time = Util.chi_to_utc(chi_start_time)
-        utc_end_time = start_time + timedelta(hours=1)
+        utc_end_time = utc_start_time + timedelta(hours=1)
 
         if utc_start_time < datetime.now():
             raise TimeError(chi_start_time, Util.utc_to_chi(datetime.now()))
@@ -54,7 +54,7 @@ class Invul(ndb.Model):
 
         """ Make new Invul """
         invul = Invul()
-        invul.medic  attacker.key.id()
+        invul.medic = attacker.key.id()
         invul.target = target.key.id()
         invul.start_time = utc_start_time
         invul.end_time = utc_end_time
@@ -80,9 +80,9 @@ class Invul(ndb.Model):
         task.add(queue_name="invul")
 
         return [(invul.medic, "Invul will been set for {} from {} to {}.".\
-                format(target_codename),\
+                format(target_codename,\
                 chi_start_time.strftime("%m-%d %I:%M%p"),
-                Util.utc_to_chi(utc_end_time).strftime("%m-%d %I:%M%p"))]
+                Util.utc_to_chi(utc_end_time).strftime("%m-%d %I:%M%p")))]
 
 
         

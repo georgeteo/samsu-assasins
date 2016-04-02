@@ -6,6 +6,8 @@ import logging
 from model.bomb import Bomb
 from model.disarm import Disarm
 from model.player import Player
+from model.snipe import Snipe
+from model.invul import Invul
 
 WEI_HAN = "+13127310539"
 
@@ -27,6 +29,7 @@ class CommandHandler(object):
 
     @classmethod
     def inner_handler(cls, message):
+        """ Return [(number, msg),...]"""
         action, params = CommandHandler.get_command(message.Body)
         attacker = Util.get_attacker(message.From)
 
@@ -44,15 +47,15 @@ class CommandHandler(object):
         elif action == "SNIPE":
             if message.From != WEI_HAN:
                 raise CommandError(action)
-            attacker = Player.query(Player.codename == params[0]).get()
-            if attacker == None:
+            sniper = Player.query(Player.codename == params[0]).get()
+            if sniper == None:
                 raise DbError(params[0])
-            return Snipe.handler(attacker, params[1])
-        elif action == "HELP":
+            return Snipe.handler(sniper, params[1])
+        elif action == "PROBLEM":
             msg = "Guide for SAMSU Assassins:\n"
             msg += "KILL <target codename>\n"
-            msg += "BOMB <place> <month> <date> <hour> <min>\n"
-            msg += "INVUL <target codename> <month> <date> <hour> <min>\n"
+            msg += "BOMB <place> <mm> <dd> <hour> <min>\n"
+            msg += "INVUL <target codename> <mm> <dd> <hour> <min>\n"
             msg += "DISARM <target codename>\n"
             msg += "SNIPE - send message and picture to {}\n".format(WEI_HAN)
             msg += "REPLY - [REPLY <number>] Y or [REPLY <number>] N"

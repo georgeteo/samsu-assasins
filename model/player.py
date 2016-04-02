@@ -22,7 +22,9 @@ class Player(ndb.Model):
     disarm = ndb.BooleanProperty(default=False)
     role = ndb.StringProperty()
     can_set_after = ndb.DateTimeProperty(default=datetime.min)
-    item = ndb.IntegerProperty()
+    item = ndb.IntegerProperty(default=0)
+    killed = ndb.StringProperty(repeated=True)
+    killed_by = ndb.StringProperty(default="")
 
     @classmethod
     def spy_hint(cls, spy):
@@ -59,7 +61,7 @@ class Team(ndb.Model):
     def push(cls, team):
         """ Returns push kill message or [] """
 
-        for player_id in get_players(team):
+        for player_id in Team.get_players(team):
             player = Player.get_by_id(player_id)
             if player == "ALIVE": # if player is alive, no push
                 return []
@@ -68,19 +70,22 @@ class Team(ndb.Model):
         aggressor_team = Team.get_by_id(team.target_of)
         target_team = Team.get_by_id(team.to_kill)
 
-        aggressor_team.to_kill = target_team.id()
+        logging.info("aggressor team", aggressor_team)
+        logging.info("target team", target_team)
+
+        aggressor_team.to_kill = target_team.key.id()
         aggressor_team.put()
 
         message = "Congratulations. Your next target is team {}:\n".format(\
-                target_team.id())
-        for target_id in get_players(target_team):
+                target_team.key.id())
+        for target_id in Team.get_players(target_team):
             target_player = Player.get_by_id(target_id)
             if target_player.state == "ALIVE":
                 message += "{} - {}\n".format(target_player.realname,\
                         target_player.codename)
 
         push_messages = []
-        for aggressor_id in get_players(aggressor_team):
+        for aggressor_id in Team.get_players(aggressor_team):
             push_messages.append((aggressor_id, message))
 
         return push_messages

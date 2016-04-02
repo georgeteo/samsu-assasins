@@ -17,6 +17,7 @@ from forms import PlayerForm, TeamForm
 from flask_wtf.csrf import CsrfProtect
 from flask_material import Material  
 from random import shuffle
+from model.invul import Invul
 
 
 app = Flask(__name__)
@@ -53,9 +54,9 @@ def twil():
         response_list = CommandHandler.handler(message)
     except (CommandError, DbError, TeamError, MeError, TargetError, TimeError,\
             ReplyError) as message: 
-        logging.exception("Error {}".format(message))
+        logging.exception("Error {}".format(message.message))
         response_num_list = [from_]
-        response = "[ERR] {}".format(message)
+        response = "[ERR] {}".format(message.message)
         response_list = [(response_num_list, response)]
     except:
         logging.exception("Unknown Error")
@@ -73,12 +74,14 @@ def twil():
                                        To=response_number,
                                        Body=response)
             outgoing_message.put()
+            logging.info(response)
 
             '''Send message'''
             client.messages.create(
                 to=response_number,
                 from_=SERVER_NUMBER,
                 body=response)
+            logging.info(response)
 
     return "Welcome to SAMSU assassins. The site is up and working.\
         Have a nice day."
@@ -149,7 +152,7 @@ def bomb_worker():
 @app.route('/invul', methods=["POST"])
 def invul_worker():
     ''' Get invul id'''
-    req_key = request.form("id", "")
+    req_key = request.form.get("id", "")
     inv = Invul.get_by_id(int(req_key))
 
     ''' No Inv found '''
@@ -165,9 +168,12 @@ def invul_worker():
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
     '''Target dead. Report back to medic'''
+    logging.info(inv)
     target_num = inv.target
+    logging.info(target_num)
     target = Player.get_by_id(target_num)
     medic = Player.get_by_id(inv.medic)
+    logging.info(medic)
     if not target:
         logging.error("INV worker: cannot find target {}".format(target_num))
         return
@@ -192,12 +198,17 @@ def invul_worker():
         task = taskqueue.Task(url="/invul", params={"id": inv_key.id()}, eta=inv.end_time)
         task.add(queue_name="invul")
 
+        logging.info("Task queue okay")
+        logging.info(target)
         target.invul = True
         target.put()
 
+        logging.info("target set okay")
+        logging.info(medic)
         medic.can_set_after = Util.next_day()
         medic.put()
 
+        logging.info("medic set okay")
         response  = "You have been granted INVUL for 1 hour from {} to {}".\
                 format(Util.utc_to_chi(inv.start_time).strftime("%m-%d %I:%M%p"),\
                 Util.utc_to_chi(inv.end_time).strftime("%m-%d %I:%M%p"))
@@ -209,6 +220,7 @@ def invul_worker():
             to=inv.target,
             from_=SERVER_NUMBER,
             body=response)
+        logging.info("message set okay")
         return "INVUL Worker"
     else:
         logging.info("INVUL worker: END 1 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
@@ -231,7 +243,7 @@ def invul_worker():
 @app.route('/disarm', methods=['POST'])
 def disarm_worker():
     ''' Get disarm id'''
-    req_key = request.form("id", "")
+    req_key = request.form.get("id", "")
     disarm = Disarm.get_by_id(int(req_key))
 
     ''' No disarm found '''
@@ -247,7 +259,7 @@ def disarm_worker():
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     disarmed_player = Player.get_by_id(disarm.victim)
     disarmed_player.disarm = False
-    disarm_player.put()
+    disarmed_player.put()
 
     disarm.deprecated = True
     disarm.put()
@@ -307,8 +319,17 @@ def start():
         team.put()
 
         team_start(team, teams[k])
+
+    output = " -> ".join([team.key.id() for team in teams])
+    output += "\n\n"
+
+    players = Player.query().fetch()
+    for player in players:
+        output += "{}\n".format(player)
+        player.put()
     
-    return " -> ".join([team.key.id() for team in teams])
+    return output
+
 
 def team_start(team, target_team):
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
@@ -336,14 +357,6 @@ def team_start(team, target_team):
             from_=SERVER_NUMBER,
             body=message)
 
-
-
-        
-
-
-
-    
-    
 
 # DEPRECATED
 # @app.route("/admin/players", methods=['GET', 'POST'])
@@ -436,7 +449,7 @@ def populate():
     team2.demo = "+4"
     p2a.put()
     p2b = Player(id="+5", realname="player2b", codename="p2b",\
-       team="Team2", state="DEAD", role="SNIPER", can_set_after=today)
+       team="Team2", state="ALIVE", role="SNIPER", can_set_after=today)
     team2.sniper="+5"
     p2b.put()
     p2c = Player(id="+6", realname="player2c", codename="p2c",\
@@ -461,6 +474,10 @@ def populate():
     team3.medic="+9"
     p3c.put()
     team3.put()
+
+    wh = Player(id="+13127310539")
+    wh.state = "ALIVE"
+    wh.put()
 
     return "Players/Team put"
 

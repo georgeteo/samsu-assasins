@@ -4,6 +4,7 @@ from model.player import Team, Player
 from model.error import *
 from model.actions import Action
 from datetime import datetime
+from model.kill import Kill
 
 WEI_HAN = "+13127310539"
 
@@ -17,6 +18,9 @@ class Snipe(object):
         logging.info("SNIPE start.")
         
         victim = Util.get_victim(victim_codename)
+        
+        logging.info("Attacker {}".format(attacker))
+        logging.info("Victim {}".format(victim))
 
         """ validation """ 
         outgoing = []
@@ -25,13 +29,13 @@ class Snipe(object):
             if attacker.role != "SNIPER":
                 raise MeError("not SNIPER")
         except (TeamError, MeError, TargetError) as message:
-            outgoing.append(([WEI_HAN], message))
-            outgoing.append(([attacker.key.id()], message))
+            outgoing.append((WEI_HAN, message.message))
+            outgoing.append((attacker.key.id(), message.message))
             return outgoing
         except:
             message = "[ERR] Unknown Error in SNIPE"
-            outgoing.append(([WEI_HAN], message))
-            outgoing.append(([attacker.key.id()], message))
+            outgoing.append((WEI_HAN, message))
+            outgoing.append((attacker.key.id(), message))
             return outgoing
 
         action = Action()
@@ -41,8 +45,11 @@ class Snipe(object):
         action.datetime = datetime.now()
         action_key = action.put()
 
-        message = "{} has been SNIPED.".format(victim_codename))
-        outgoing.append([victim.key.id()], "You have been SNIPED. (Ref {}).".\
-                format(action_key))
-        outgoing.append("*", message)
+        victim.state = "DEAD"
+        victim.put()
+
+        message = "{} has been SNIPED.".format(victim_codename)
+        outgoing.append((victim.key.id(), "You have been SNIPED. (Ref {}).".\
+                format(action_key.id())))
+        outgoing.append(("*", message))
         return outgoing

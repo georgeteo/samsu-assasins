@@ -28,15 +28,15 @@ class Util(object):
 
     @classmethod
     def chi_to_utc(cls, chi_dt):
-        return chi_dt.replace(tzinfo=None) + timedelta(hours=6)
+        return chi_dt.replace(tzinfo=None) + timedelta(hours=5)
 
     @classmethod
     def utc_to_chi(cls, utc_dt):
-        return utc_dt.replace(tzinfo=None) - timedelta(hours=6)
+        return utc_dt.replace(tzinfo=None) - timedelta(hours=5)
 
     @classmethod
     def next_day(cls):
         """ Return UTC time """
         chi_today = Util.utc_to_chi(datetime.utcnow()).date()
         chi_tomorrow = chi_today + timedelta(1)
-        return datetime.combine(chi_tomorrow, time(6, 0, 0))
+        return datetime.combine(chi_tomorrow, time(5, 0, 0))
