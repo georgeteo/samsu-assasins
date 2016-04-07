@@ -15,13 +15,13 @@ from google.appengine.api import taskqueue
 from model.disarm import Disarm
 from forms import PlayerForm, TeamForm
 from flask_wtf.csrf import CsrfProtect
-from flask_material import Material  
+from flask_material import Material
 from random import shuffle
 from model.invul import Invul
 
 
 app = Flask(__name__)
-Material(app)  
+Material(app)
 app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 ACCOUNT_SID = "AC04675359e5f5e5ca433a2a5c17e9ddf6"
@@ -53,7 +53,7 @@ def twil():
     try: # TODO: Move try, except into CommandHandler
         response_list = CommandHandler.handler(message)
     except (CommandError, DbError, TeamError, MeError, TargetError, TimeError,\
-            ReplyError) as message: 
+            ReplyError) as message:
         logging.exception("Error {}".format(message.message))
         response_num_list = [from_]
         response = "[ERR] {}".format(message.message)
@@ -64,7 +64,7 @@ def twil():
         response = "[ERR] Unknown Error"
         response_list = [(response_num_list, response)]
 
-    # TODO: Write tests for this part 
+    # TODO: Write tests for this part
     for response_num_list, response in response_list:
         for response_number in response_num_list:
             logging.info("Making message {} for {} with num_list {}".format(response, response_number, response_num_list))
@@ -86,7 +86,7 @@ def twil():
     return "Welcome to SAMSU assassins. The site is up and working.\
         Have a nice day."
 
-# TODO: From here down, not updated for new error types. Not tested. 
+# TODO: From here down, not updated for new error types. Not tested.
 @app.route('/bomb', methods=['POST'])
 def bomb_worker():
     ''' Get bomb id '''
@@ -269,7 +269,7 @@ def disarm_worker():
 
     response = "You are no longer DISARMED. Go ahead and kill people."
     msg = Message(From=SERVER_NUMBER,
-                  To=disarm.victim, 
+                  To=disarm.victim,
                   Body=response)
     msg.put()
     client.messages.create(
@@ -292,7 +292,7 @@ def spy():
             continue
         response = Player.spy_hint(spy)
         msg = Message(From=SERVER_NUMBER,
-                      To=spy.key.id(), 
+                      To=spy.key.id(),
                       Body=response)
         msg.put()
         client.messages.create(
@@ -313,7 +313,7 @@ def start():
             k = 0
         else:
             k = j + 1
-        
+
         team.to_kill = teams[k].key.id()
         team.target_of = teams[i].key.id()
         team.put()
@@ -327,7 +327,7 @@ def start():
     for player in players:
         output += "{}\n".format(player)
         player.put()
-    
+
     return output
 
 
@@ -336,7 +336,7 @@ def team_start(team, target_team):
     message = "Welcome to SAMSU assassins 2016. Your target is team {}:\n".\
             format(target_team.key.id())
     target_team = [target_team.sniper, target_team.medic, target_team.demo, target_team.spy]
-    
+
     for target in target_team:
         if target == "":
             continue
@@ -347,7 +347,7 @@ def team_start(team, target_team):
     for p in team_players:
         if p == "":
             continue
-        
+
         msg = Message(From=SERVER_NUMBER,
                       To=p,
                       Body=message)
@@ -364,18 +364,18 @@ def team_start(team, target_team):
 #     players = Player.query().fetch()
 #     return render_template("players.html", players=players)
 #     # TODO: link player objects to individual objects
-# 
+#
 # @app.route("/admin/teams", methods=['GET', 'POST'])
 # def admin_teams():
 #     teams = Team.query().fetch()
 #     print teams
 #     return render_template("teams.html", teams=teams)
-# 
+#
 # @app.route("/admin/new_player", methods=['GET', 'POST'])
 # def new_player_form():
 #     form = PlayerForm()
 #     return render_template("player_form.html", playername="New Player", form=form)
-# 
+#
 # @app.route("/admin/players/<name>/edit", methods=['GET', 'POST'])
 # def player_form(name):
 #     player = Player.get_by_id(name)
@@ -384,23 +384,23 @@ def team_start(team, target_team):
 #         print form
 #         return "FOO"
 #     return render_template("player_form.html", playername=name, form=form)
-# 
+#
 # @app.route("/admin/teams/<name>/edit", methods=['GET', 'POST'])
 # def team_form(name):
 #     team = Team.get_by_id(name)
 #     form = TeamForm(obj=team)
 #     return render_template("team_form.html", teamname=name, form=form)
-# 
+#
 # @app.route("/admin/new_team", methods=['GET', 'POST'])
 # def new_team_form(name):
 #     form = TeamForm()
 #     return render_template("team_form.html", teamname=name, form=form)
-# 
+#
 # @app.route("/admin/<item_pair>", methods=['GET', 'POST'])
 # def item_form(item_pair):
 #     item = item_pair[0]
 #     item_type = item_pair[1]
-#     
+#
 #     if item == None:
 #         return "Item of None Type"
 #     if item_type == "INVUL":
@@ -458,7 +458,7 @@ def populate():
     team2.medic="+6"
     p2c.put()
     team2.put()
-    
+
     # Make Team 3 and populate with player 3a, 3b, 3c.
     team3 = Team(id="Team3", to_kill="Team1", target_of="Team2")
     p3a = Player(id="+7", realname="player3a", codename="p3a",\
