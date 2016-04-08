@@ -29,16 +29,40 @@ class Player(ndb.Model):
     @classmethod
     def spy_hint(cls, spy):
         ''' Make spy hint '''
+        if random.randint(0,1) == 1:
+            return Player.spy_hint_attacker_target(spy)
+        else:
+            return Player.spy_hint_names(spy)
+
+    @classmethod
+    def spy_hint_attacker_target(cls, spy):
+        ''' Spy hint a attacking b '''
         random_attackers = Player.query(Player.team != spy.team).fetch()
+        if len(random_attackers) == 0:
+            return "SPY: No more hints."
         one_attacker = random.choice(random_attackers)
         attacker_team = Team.get_by_id(one_attacker.team)
         alive_targets = Player.query(ndb.AND(Player.team == attacker_team.to_kill,\
                 Player.state == "ALIVE")).fetch()
+        if len(alive_targets) == 0:
+            return "SPY: No more hints."
         one_target = random.choice(alive_targets)
         msg = "SPY: {} wants to kill {}.".format(one_attacker.realname,\
                 one_target.realname)
         return msg
 
+    @classmethod
+    def spy_hint_attacker_target(cls, spy):
+        ''' Spy hint realname - codename '''
+        spy_team = Team.get_by_id(spy.team)
+        random_people = Player.query(ndb.AND(Player.team != spy.team,\
+                Player.team != spy_team.to_kill)).fetch()
+        if len(random_people) == 0:
+            return "SPY: No more hints."
+        random_person = random.choice(random_people)
+        msg = "SPY: {}'s codename is {}.".format(random_people.realname,\
+                random_person.codename)
+        return msg
 
 class Team(ndb.Model):
     '''Team objectx
@@ -57,7 +81,7 @@ class Team(ndb.Model):
     demo = ndb.StringProperty(default="")
     spy = ndb.StringProperty(default="")
 
-    @classmethod 
+    @classmethod
     def push(cls, team):
         """ Returns push kill message or [] """
 
