@@ -27,7 +27,7 @@ class Invul(ndb.Model):
 
         if attacker.state == "DEAD":
             raise MeError("DEAD")
-        
+
         if attacker.role != "MEDIC":
             raise MeError("not MEDIC")
 
@@ -44,7 +44,7 @@ class Invul(ndb.Model):
                 day=int(params[1]), hour=int(params[2]),\
                 minute=int(params[3]))
         utc_start_time = Util.chi_to_utc(chi_start_time)
-        utc_end_time = utc_start_time + timedelta(hours=1)
+        utc_end_time = utc_start_time + timedelta(hours=8)
 
         if utc_start_time < datetime.now():
             raise TimeError(chi_start_time, Util.utc_to_chi(datetime.now()))
@@ -85,13 +85,13 @@ class Invul(ndb.Model):
                 Util.utc_to_chi(utc_end_time).strftime("%m-%d %I:%M%p")))]
 
 
-        
-
-        
-        
 
 
 
-    
 
-    
+
+
+
+
+
+
