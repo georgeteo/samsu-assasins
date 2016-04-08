@@ -34,8 +34,8 @@ class Disarm(ndb.Model):
         action.need_validation = True
         action_key = action.put()
 
-        return [(action.victim, "[REPLY {}] {} claimed to have disarm you. " 
-            "Reply Y/N.".format(action_key.id(), attacker.realname))]
+        return [(action.victim, "{} claimed to have disarm you. "
+            "[REPLY {}] Reply Y/N.".format(action_key.id(), attacker.realname))]
 
     @classmethod
     def reply_handler(cls, action, response):
@@ -54,7 +54,7 @@ class Disarm(ndb.Model):
             disarm.starttime = datetime.now()
             disarm.endtime = datetime.now() + timedelta(hours = 1)
             disarm_key = disarm.put()
-            
+
             task = taskqueue.Task(url="/disarm", params={"id": disarm_key.id()},
                     eta=disarm.endtime)
             task.add(queue_name="disarm")

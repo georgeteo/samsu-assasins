@@ -50,7 +50,7 @@ def twil():
 
     ''' Pass message into action builder.'''
     response_list = []
-    try: # TODO: Move try, except into CommandHandler
+    try:
         response_list = CommandHandler.handler(message)
     except (CommandError, DbError, TeamError, MeError, TargetError, TimeError,\
             ReplyError) as message:
@@ -64,7 +64,6 @@ def twil():
         response = "[ERR] Unknown Error"
         response_list = [(response_num_list, response)]
 
-    # TODO: Write tests for this part
     for response_num_list, response in response_list:
         for response_number in response_num_list:
             logging.info("Making message {} for {} with num_list {}".format(response, response_number, response_num_list))
@@ -86,7 +85,6 @@ def twil():
     return "Welcome to SAMSU assassins. The site is up and working.\
         Have a nice day."
 
-# TODO: From here down, not updated for new error types. Not tested.
 @app.route('/bomb', methods=['POST'])
 def bomb_worker():
     ''' Get bomb id '''
@@ -125,9 +123,9 @@ def bomb_worker():
     action_key = action.put()
 
 
-    # TODO: restrict to not INVUL
-    response_num_list = [key.id() for key in Player.query(Player.state.IN(["ALIVE"]) ).fetch(keys_only=True)]
-    response = "[REPLY {}] {} has been bombed at {}. Reply Y if you were there.".format(
+    response_num_list = [key.id() for key in Player.query(ndb.AND(Player.state=="ALIVE",\
+            Player.invul==False) ).fetch(keys_only=True)]
+    response = "{} has been bombed at {}. [REPLY {}] Reply Y if you were there.".format(
         action_key.id(), action.place,
         Util.utc_to_chi(action.datetime).strftime("%m-%d %I:%M%p"))
 
