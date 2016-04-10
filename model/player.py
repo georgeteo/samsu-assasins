@@ -30,8 +30,10 @@ class Player(ndb.Model):
     def spy_hint(cls, spy):
         ''' Make spy hint '''
         if random.randint(0,1) == 1:
+            logging.info("Spy hint: attacker-target hint.")
             return Player.spy_hint_attacker_target(spy)
         else:
+            logging.info("Spy hint: realname-codename hint.")
             return Player.spy_hint_names(spy)
 
     @classmethod
@@ -39,13 +41,13 @@ class Player(ndb.Model):
         ''' Spy hint a attacking b '''
         random_attackers = Player.query(Player.team != spy.team).fetch()
         if len(random_attackers) == 0:
-            return "SPY: No more hints."
+            return "SPY: No more new attacker-target hints."
         one_attacker = random.choice(random_attackers)
         attacker_team = Team.get_by_id(one_attacker.team)
         alive_targets = Player.query(ndb.AND(Player.team == attacker_team.to_kill,\
                 Player.state == "ALIVE")).fetch()
         if len(alive_targets) == 0:
-            return "SPY: No more hints."
+            return "SPY: No one is left alive on any other team."
         one_target = random.choice(alive_targets)
         msg = "SPY: {} wants to kill {}.".format(one_attacker.realname,\
                 one_target.realname)
@@ -58,7 +60,7 @@ class Player(ndb.Model):
         random_people = Player.query(ndb.AND(Player.team != spy.team,\
                 Player.team != spy_team.to_kill)).fetch()
         if len(random_people) == 0:
-            return "SPY: No more hints."
+            return "SPY: No more new realname-codename hints."
         random_person = random.choice(random_people)
         msg = "SPY: {}'s codename is {}.".format(random_people.realname,\
                 random_person.codename)
