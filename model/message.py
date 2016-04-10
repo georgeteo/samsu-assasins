@@ -1,6 +1,7 @@
 from google.appengine.ext import ndb
 from model.player import Player
 import logging
+from datetime import datetime
 
 
 class Message(ndb.Model):
@@ -16,4 +17,4 @@ class Message(ndb.Model):
     From = ndb.StringProperty()
     To = ndb.StringProperty()
     Body = ndb.StringProperty()
-    Picture = ndb.StringProperty(default="")
+    datetime = ndb.DateTimeProperty(default=datetime.now())
