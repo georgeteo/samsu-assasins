@@ -29,8 +29,11 @@ AUTH_TOKEN = "ea3bc3ef80b8a7283d26eb94426518c8"
 SERVER_NUMBER = "+17735701611"
 WEI_HAN = "+13127310539"
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
+def index():
+    return "Samsu assassins is working."
 
+@app.route('/twil', methods=['GET', 'POST'])
 def twil():
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     from_ = request.form.get("From", WEI_HAN)
