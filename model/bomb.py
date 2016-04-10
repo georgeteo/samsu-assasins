@@ -99,11 +99,16 @@ class Bomb(ndb.Model):
         if response == "Y" or response == "y":
             action_c.need_validation = False
             action_c.incorrect_kill = False
-            action_c.put()
+            action_c_key = action_c.put()
 
             victim = Player.get_by_id(action_c.victim)
             victim.state = "DEAD"
+            victim.killed_by = action_c_key.id()
             victim.put()
+
+            attacker = Player.get_by_id(action_c.attacker)
+            attacker.killed.append(action_c_key.id())
+            attacker.put()
 
             return [("*", "{} has been killed".format(victim.codename))]
 

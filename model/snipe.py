@@ -16,13 +16,13 @@ class Snipe(object):
     @classmethod
     def handler(cls, attacker, victim_codename):
         logging.info("SNIPE start.")
-        
+
         victim = Util.get_victim(victim_codename)
-        
+
         logging.info("Attacker {}".format(attacker))
         logging.info("Victim {}".format(victim))
 
-        """ validation """ 
+        """ validation """
         outgoing = []
         try:
             Kill.validate_kill(attacker, victim)
@@ -45,7 +45,12 @@ class Snipe(object):
         action.datetime = datetime.now()
         action_key = action.put()
 
+        attacker = Player.get_by_id(action.attacker)
+        attacker.killed.append(action_key.id())
+        attacker.put()
+
         victim.state = "DEAD"
+        victim.killed_by = action_key.id()
         victim.put()
 
         message = "{} has been SNIPED.".format(victim_codename)

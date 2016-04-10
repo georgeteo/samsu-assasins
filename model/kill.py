@@ -75,15 +75,14 @@ class Kill(object):
             action_key = action.put()
 
             victim = Player.get_by_id(action.victim)
+            attacker = Player.get_by_id(action.attacker)
+
             victim.state = "DEAD"
-            victim.killed_by = action_key.key.id()
+            victim.killed_by = action_key.id()
             victim.put()
 
-            attacker = Player.get_by_id(action.attacker)
-            attacker.killed.append(victim.realname)
+            attacker.killed.append(action_key.id())
             attacker.put()
-
-
 
             return [("*", "{} has been killed".format(victim.codename))]
         else:
