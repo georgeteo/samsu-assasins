@@ -128,7 +128,7 @@ def bomb_worker():
 
     response_num_list = [key.id() for key in Player.query(ndb.AND(Player.state=="ALIVE",\
             Player.invul==False) ).fetch(keys_only=True)]
-    response = "{} has been bombed at {}. [REPLY {}] Reply Y if you were there.".format(
+    response = "{} has been bombed at {}. [REPLY {}] Y if you were there.".format(
         action_key.id(), action.place,
         Util.utc_to_chi(action.datetime).strftime("%m-%d %I:%M%p"))
 

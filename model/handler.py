@@ -51,7 +51,7 @@ class CommandHandler(object):
             if sniper == None:
                 raise DbError(params[0])
             return Snipe.handler(sniper, params[1])
-        elif action == "PROBLEM":
+        elif action == "?":
             msg = "Guide for SAMSU Assassins:\n"
             msg += "KILL <target codename>\n"
             msg += "BOMB <place> <mm> <dd> <hour> <min>\n"

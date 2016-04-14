@@ -30,7 +30,7 @@ class Kill(object):
         logging.info("KILL finish")
 
         return [(action.victim, "{} claimed to have killed you. "
-            "[REPLY {}] Reply Y/N.".format(action_key.id(), attacker.realname))]
+            "[REPLY {}] Y/N.".format(action_key.id(), attacker.realname))]
 
     @classmethod
     def validate_kill(cls, attacker, victim):
