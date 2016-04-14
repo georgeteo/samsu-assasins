@@ -30,7 +30,7 @@ class Kill(object):
         logging.info("KILL finish")
 
         return [(action.victim, "{} claimed to have killed you. "
-            "[REPLY {}] Y/N.".format(action_key.id(), attacker.realname))]
+            "[REPLY {}] Y/N.".format(attacker.realname, action_key.id()))]
 
     @classmethod
     def validate_kill(cls, attacker, victim):
@@ -78,10 +78,10 @@ class Kill(object):
             attacker = Player.get_by_id(action.attacker)
 
             victim.state = "DEAD"
-            victim.killed_by = action_key.id()
+            victim.killed_by = str(action_key.id())
             victim.put()
 
-            attacker.killed.append(action_key.id())
+            attacker.killed.append(str(action_key.id()))
             attacker.put()
 
             return [("*", "{} has been killed".format(victim.codename))]

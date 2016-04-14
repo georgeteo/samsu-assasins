@@ -46,15 +46,16 @@ class Snipe(object):
         action_key = action.put()
 
         attacker = Player.get_by_id(action.attacker)
-        attacker.killed.append(action_key.id())
+        attacker.killed.append(str(action_key.id()))
         attacker.put()
 
         victim.state = "DEAD"
-        victim.killed_by = action_key.id()
+        victim.killed_by = str(action_key.id())
         victim.put()
 
         message = "{} has been SNIPED.".format(victim_codename)
         outgoing.append((victim.key.id(), "You have been SNIPED. (Ref {}).".\
                 format(action_key.id())))
         outgoing.append(("*", message))
+        outgoing += Team.push(Team.get_by_id(victim.team))
         return outgoing

@@ -54,7 +54,7 @@ class CommandHandler(object):
         elif action == "?":
             msg = "Guide for SAMSU Assassins:\n"
             msg += "KILL <target codename>\n"
-            msg += "BOMB <place> <mm> <dd> <hour> <min>\n"
+            msg += "BOMB <mm> <dd> <hour> <min> <place>\n"
             msg += "INVUL <target codename> <mm> <dd> <hour> <min>\n"
             msg += "DISARM <target codename>\n"
             msg += "SNIPE - send message and picture to {}\n".format(WEI_HAN)

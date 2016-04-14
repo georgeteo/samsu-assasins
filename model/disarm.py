@@ -35,7 +35,7 @@ class Disarm(ndb.Model):
         action_key = action.put()
 
         return [(action.victim, "{} claimed to have disarm you. "
-            "[REPLY {}] Y/N.".format(action_key.id(), attacker.realname))]
+            "[REPLY {}] Y/N.".format(attacker.realname, action_key.id()))]
 
     @classmethod
     def reply_handler(cls, action, response):

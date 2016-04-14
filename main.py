@@ -47,7 +47,6 @@ def twil():
     message = Message(From=from_,
                       To=SERVER_NUMBER,
                       Body=body,
-                      Picture=picture,
                       id=message_id)
     message.put()
 
@@ -128,9 +127,10 @@ def bomb_worker():
 
     response_num_list = [key.id() for key in Player.query(ndb.AND(Player.state=="ALIVE",\
             Player.invul==False) ).fetch(keys_only=True)]
-    response = "{} has been bombed at {}. [REPLY {}] Y if you were there.".format(
-        action_key.id(), action.place,
-        Util.utc_to_chi(action.datetime).strftime("%m-%d %I:%M%p"))
+    response = "{} has been bombed at {}. If you were there, [REPLY {}] Y.".format(
+        action.place,
+        Util.utc_to_chi(action.datetime).strftime("%m-%d %I:%M%p"),
+        action_key.id())
 
     for response_number in response_num_list:
         logging.info("Making message {} for {} with num_list {}".format(
@@ -193,7 +193,7 @@ def invul_worker():
 
     '''Target alive. If INVUL not yet in effect, trigger'''
     if not inv.in_effect:
-        logging.info("INVUL worker: Triggering 1 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
+        logging.info("INVUL worker: Triggering 8 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
         inv.in_effect = True
         inv_key = inv.put()
         task = taskqueue.Task(url="/invul", params={"id": inv_key.id()}, eta=inv.end_time)
@@ -210,7 +210,7 @@ def invul_worker():
         medic.put()
 
         logging.info("medic set okay")
-        response  = "You have been granted INVUL for 1 hour from {} to {}".\
+        response  = "You have been granted INVUL for 8 hour from {} to {}".\
                 format(Util.utc_to_chi(inv.start_time).strftime("%m-%d %I:%M%p"),\
                 Util.utc_to_chi(inv.end_time).strftime("%m-%d %I:%M%p"))
         msg = Message(From=SERVER_NUMBER,
@@ -224,7 +224,7 @@ def invul_worker():
         logging.info("message set okay")
         return "INVUL Worker"
     else:
-        logging.info("INVUL worker: END 1 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
+        logging.info("INVUL worker: END 8 hour INVUL for target {} at {}".format(target.codename, datetime.now()))
         inv.deprecated = True
         inv.put()
         target.invul = False
@@ -482,13 +482,13 @@ def populate():
 
     return "Players/Team put"
 
-@app.route("/test/whspy")
-def wh_spy():
-    wh = Player.get_by_id("+13127310539")
-    wh.role = "SPY"
-    wh.state = "ALIVE"
-    wh.put()
-    return "WH is a {} and {}".format(wh.role, wh.state)
+@app.route("/test/seed")
+def seed():
+    team = Team(id="SeedTeam", to_kill="SeedTeam2", target_of="SeedTeam0", sniper="P1", medic="P2", demo="P3", spy="P4" )
+    team.put()
+    player = Player(id="+12345678", team="SeedTeam", realname="Player1", codename="P1", state="ALIVE", role="SNIPER")
+    player.put()
+    return "Done"
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -37,16 +37,20 @@ class Bomb(ndb.Model):
             raise MeError("DISARM")
 
         ''' Parse place and time '''
-        if re.match(r"\w \d+ \d+ \d+ \d+", " ".join(params)):
+        if len(params) < 5:
             raise CommandError("BOMB - {}".format(" ".join(params)))
-        place = params.pop(0)
+        month = params.pop(0)
+        day = params.pop(0)
+        minute = params.pop(0)
+        second = params.pop(0)
+        place = " ".join(params)
 
         central = pytz.timezone("US/Central")
         chi_dt = datetime(2016,
-                        int(params[0]),
-                        int(params[1]),
-                        int(params[2]),
-                        int(params[3]),
+                        int(month),
+                        int(day),
+                        int(minute),
+                        int(second),
                         tzinfo=central)
         utc_dt = Util.chi_to_utc(chi_dt)
         logging.debug("CHI time: {}".format(chi_dt))
@@ -103,11 +107,11 @@ class Bomb(ndb.Model):
 
             victim = Player.get_by_id(action_c.victim)
             victim.state = "DEAD"
-            victim.killed_by = action_c_key.id()
+            victim.killed_by = str(action_c_key.id())
             victim.put()
 
             attacker = Player.get_by_id(action_c.attacker)
-            attacker.killed.append(action_c_key.id())
+            attacker.killed.append(str(action_c_key.id()))
             attacker.put()
 
             return [("*", "{} has been killed".format(victim.codename))]

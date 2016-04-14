@@ -3,6 +3,8 @@ from datetime import datetime
 import random
 import logging
 
+WEI_HAN = "+13127310539"
+
 class Player(ndb.Model):
     '''Pllayer object is child of a Team object.
     Key: phone number
@@ -23,8 +25,8 @@ class Player(ndb.Model):
     role = ndb.StringProperty()
     can_set_after = ndb.DateTimeProperty(default=datetime.min)
     item = ndb.IntegerProperty(default=0)
-    killed = ndb.StringProperty(repeated=True)
     killed_by = ndb.StringProperty(default="")
+    killed = ndb.StringProperty(repeated=True)
 
     @classmethod
     def spy_hint(cls, spy):
@@ -87,10 +89,17 @@ class Team(ndb.Model):
     def push(cls, team):
         """ Returns push kill message or [] """
 
+        count_my_team = 0
         for player_id in Team.get_players(team):
             player = Player.get_by_id(player_id)
             if player == "ALIVE": # if player is alive, no push
-                return []
+                count_my_team += 1
+
+        if count_my_team > 0:
+            if team.target_of == team.to_kill:
+                winner = Player.query(Player.state == "ALIVE").get()
+                msg = "Congratulations. You are the winner."
+                return [(winner.key.id(), msg), (WEI_HAN, "Game is over. Please check that winner got the message.")]
 
         # Else, all players on this team DEAD, push
         aggressor_team = Team.get_by_id(team.target_of)
@@ -104,13 +113,19 @@ class Team(ndb.Model):
 
         message = "Congratulations. Your next target is team {}:\n".format(\
                 target_team.key.id())
+        count = 0
         for target_id in Team.get_players(target_team):
             target_player = Player.get_by_id(target_id)
             if target_player.state == "ALIVE":
+                count += 1
                 message += "{} - {}\n".format(target_player.realname,\
                         target_player.codename)
 
         push_messages = []
+        if count == 1:
+            message = "Congratulations. You are the winner."
+            push_messages.append((WEI_HAN, "Game is over. Please check that winner got the message."))
+
         for aggressor_id in Team.get_players(aggressor_team):
             push_messages.append((aggressor_id, message))
 
