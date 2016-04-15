@@ -58,7 +58,8 @@ class CommandHandler(object):
             msg += "INVUL <target codename> <mm> <dd> <hour> <min>\n"
             msg += "DISARM <target codename>\n"
             msg += "SNIPE - send message and picture to {}\n".format(WEI_HAN)
-            msg += "REPLY - [REPLY <number>] Y or [REPLY <number>] N"
+            msg += "REPLY - [REPLY <number>] Y or [REPLY <number>] N\n"
+            msg += "If you receive an UNKNOWN ERROR or don't get a message that you expect, contact Wei Han at 312-731-0539."
             return [(attacker.key.id(), msg)]
         else:
             raise CommandError(action)

@@ -281,11 +281,13 @@ def disarm_worker():
 
 @app.route('/spy')
 def spy():
+    logging.info("Spy cron")
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
     ''' Get all ALIVE spies '''
-    alive_spies = Player.query(ndb.AND(Player.state == "ALIVE",\
-            Player.role == "SPY")).fetch()
+    alive_spies = Player.query(Player.role == "SPY").fetch()
+    logging.info("Alive Spies:")
+    logging.info(alive_spies)
 
     ''' For each spy, make and send hint '''
     for spy in alive_spies:
@@ -304,60 +306,60 @@ def spy():
     logging.info("SPY CRON: completed send to {}".format(alive_spies))
     return "Ok"
 
-@app.route('/start')
-def start():
-    teams = Team.query().fetch()
-    shuffle(teams)
-    for j, team in enumerate(teams):
-        i = j - 1
-        if j == len(teams) - 1:
-            k = 0
-        else:
-            k = j + 1
-
-        team.to_kill = teams[k].key.id()
-        team.target_of = teams[i].key.id()
-        team.put()
-
-        team_start(team, teams[k])
-
-    output = " -> ".join([team.key.id() for team in teams])
-    output += "\n\n"
-
-    players = Player.query().fetch()
-    for player in players:
-        output += "{}\n".format(player)
-        player.put()
-
-    return output
-
-
-def team_start(team, target_team):
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    message = "Welcome to SAMSU assassins 2016. Your target is team {}:\n".\
-            format(target_team.key.id())
-    target_team = [target_team.sniper, target_team.medic, target_team.demo, target_team.spy]
-
-    for target in target_team:
-        if target == "":
-            continue
-        target_player = Player.get_by_id(target)
-        message += "{} - {}".format(target_player.realname, target_player.codename)
-
-    team_players = [team.sniper, team.medic, team.demo, team.spy]
-    for p in team_players:
-        if p == "":
-            continue
-
-        msg = Message(From=SERVER_NUMBER,
-                      To=p,
-                      Body=message)
-        msg.put()
-        client.messages.create(
-            to=p,
-            from_=SERVER_NUMBER,
-            body=message)
-
+#@app.route('/start')
+#def start():
+#    teams = Team.query().fetch()
+#    shuffle(teams)
+#    for j, team in enumerate(teams):
+#        i = j - 1
+#        if j == len(teams) - 1:
+#            k = 0
+#        else:
+#            k = j + 1
+#
+#        team.to_kill = teams[k].key.id()
+#        team.target_of = teams[i].key.id()
+#        team.put()
+#
+#        team_start(team, teams[k])
+#
+#    output = " -> ".join([team.key.id() for team in teams])
+#    output += "\n\n"
+#
+#    players = Player.query().fetch()
+#    for player in players:
+#        output += "{}\n".format(player)
+#        player.put()
+#
+#    return output
+#
+#
+#def team_start(team, target_team):
+#    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+#    message = "Welcome to SAMSU assassins 2016. Your target is team {}:\n".\
+#            format(target_team.key.id())
+#    target_team = [target_team.sniper, target_team.medic, target_team.demo, target_team.spy]
+#
+#    for target in target_team:
+#        if target == "":
+#            continue
+#        target_player = Player.get_by_id(target)
+#        message += "{} - {}".format(target_player.realname, target_player.codename)
+#
+#    team_players = [team.sniper, team.medic, team.demo, team.spy]
+#    for p in team_players:
+#        if p == "":
+#            continue
+#
+#        msg = Message(From=SERVER_NUMBER,
+#                      To=p,
+#                      Body=message)
+#        msg.put()
+#        client.messages.create(
+#            to=p,
+#            from_=SERVER_NUMBER,
+#            body=message)
+#
 
 # DEPRECATED
 # @app.route("/admin/players", methods=['GET', 'POST'])
@@ -421,74 +423,66 @@ def team_start(team, target_team):
 #             form = BombForm()
 #     return render_template("item_form.html", name=name, form=form)
 
-@app.route("/test/populateDB")
-def populate():
-    today = Util.next_day() - timedelta(days=1)
-
-    team1 = Team(id = "Team1", to_kill="Team2", target_of="Team3")
-    p1a = Player(id="+1", realname="player1a", codename="p1a",\
-       team="Team1", state="ALIVE", role="DEMO", can_set_after=today)
-    team1.demo = "+1"
-    p1a.put()
-    p1b = Player(id="+2", realname="player1b", codename="p1b",\
-       team="Team1", state="ALIVE", disarm=True, role="SNIPER",\
-       can_set_after=today)
-    team1.sniper="+2"
-    p1b.put()
-    p1c = Player(id="+3", realname="player1c", codename="p1c",\
-       team="Team1", state="ALIVE", role="MEDIC", can_set_after=today)
-    team1.medic="+3"
-    p1c.put()
-    team1.put()
-
-    # Make Team 2 and populate with player 2a, 2b, 2c.
-    # p2a is ALIVE p2b is DEAD
-    # p2c is INVUL
-    team2 = Team(id="Team2", to_kill="Team3", target_of="Team1")
-    p2a = Player(id="+4", realname="player2a", codename="p2a",\
-       team="Team2", state="ALIVE", role="DEMO", can_set_after=today)
-    team2.demo = "+4"
-    p2a.put()
-    p2b = Player(id="+5", realname="player2b", codename="p2b",\
-       team="Team2", state="ALIVE", role="SNIPER", can_set_after=today)
-    team2.sniper="+5"
-    p2b.put()
-    p2c = Player(id="+6", realname="player2c", codename="p2c",\
-       team="Team2", state="ALIVE", invul=True, role="MEDIC",\
-       can_set_after=today)
-    team2.medic="+6"
-    p2c.put()
-    team2.put()
-
-    # Make Team 3 and populate with player 3a, 3b, 3c.
-    team3 = Team(id="Team3", to_kill="Team1", target_of="Team2")
-    p3a = Player(id="+7", realname="player3a", codename="p3a",\
-       team="Team3", state="ALIVE", role="DEMO", can_set_after=today)
-    team3.demo = "+7"
-    p3a.put()
-    p3b = Player(id="+8", realname="player3b", codename="p3b",\
-       team="Team3", state="ALIVE", role="SPY", can_set_after=today)
-    team3.sniper="+8"
-    p3b.put()
-    p3c = Player(id="+9", realname="player3c", codename="p3c",\
-       team="Team3", state="ALIVE", role="MEDIC", can_set_after=today)
-    team3.medic="+9"
-    p3c.put()
-    team3.put()
-
-    wh = Player(id="+13127310539")
-    wh.state = "ALIVE"
-    wh.put()
-
-    return "Players/Team put"
-
-@app.route("/test/seed")
-def seed():
-    team = Team(id="SeedTeam", to_kill="SeedTeam2", target_of="SeedTeam0", sniper="P1", medic="P2", demo="P3", spy="P4" )
-    team.put()
-    player = Player(id="+12345678", team="SeedTeam", realname="Player1", codename="P1", state="ALIVE", role="SNIPER")
-    player.put()
-    return "Done"
+# @app.route("/test/populateDB")
+# def populate():
+#     today = Util.next_day() - timedelta(days=1)
+#
+#     team1 = Team(id = "Team1", to_kill="Team2", target_of="Team3")
+#     p1a = Player(id="+1", realname="player1a", codename="p1a",\
+#        team="Team1", state="ALIVE", role="DEMO", can_set_after=today)
+#     team1.demo = "+1"
+#     p1a.put()
+#     p1b = Player(id="+2", realname="player1b", codename="p1b",\
+#        team="Team1", state="ALIVE", disarm=True, role="SNIPER",\
+#        can_set_after=today)
+#     team1.sniper="+2"
+#     p1b.put()
+#     p1c = Player(id="+3", realname="player1c", codename="p1c",\
+#        team="Team1", state="ALIVE", role="MEDIC", can_set_after=today)
+#     team1.medic="+3"
+#     p1c.put()
+#     team1.put()
+#
+#     # Make Team 2 and populate with player 2a, 2b, 2c.
+#     # p2a is ALIVE p2b is DEAD
+#     # p2c is INVUL
+#     team2 = Team(id="Team2", to_kill="Team3", target_of="Team1")
+#     p2a = Player(id="+4", realname="player2a", codename="p2a",\
+#        team="Team2", state="ALIVE", role="DEMO", can_set_after=today)
+#     team2.demo = "+4"
+#     p2a.put()
+#     p2b = Player(id="+5", realname="player2b", codename="p2b",\
+#        team="Team2", state="ALIVE", role="SNIPER", can_set_after=today)
+#     team2.sniper="+5"
+#     p2b.put()
+#     p2c = Player(id="+6", realname="player2c", codename="p2c",\
+#        team="Team2", state="ALIVE", invul=True, role="MEDIC",\
+#        can_set_after=today)
+#     team2.medic="+6"
+#     p2c.put()
+#     team2.put()
+#
+#     # Make Team 3 and populate with player 3a, 3b, 3c.
+#     team3 = Team(id="Team3", to_kill="Team1", target_of="Team2")
+#     p3a = Player(id="+7", realname="player3a", codename="p3a",\
+#        team="Team3", state="ALIVE", role="DEMO", can_set_after=today)
+#     team3.demo = "+7"
+#     p3a.put()
+#     p3b = Player(id="+8", realname="player3b", codename="p3b",\
+#        team="Team3", state="ALIVE", role="SPY", can_set_after=today)
+#     team3.sniper="+8"
+#     p3b.put()
+#     p3c = Player(id="+9", realname="player3c", codename="p3c",\
+#        team="Team3", state="ALIVE", role="MEDIC", can_set_after=today)
+#     team3.medic="+9"
+#     p3c.put()
+#     team3.put()
+#
+#     wh = Player(id="+13127310539")
+#     wh.state = "ALIVE"
+#     wh.put()
+#
+#     return "Players/Team put"
 
 @app.errorhandler(404)
 def page_not_found(e):

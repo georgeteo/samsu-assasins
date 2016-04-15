@@ -88,25 +88,29 @@ class Team(ndb.Model):
     @classmethod
     def push(cls, team):
         """ Returns push kill message or [] """
+        logging.info("Push start")
 
         count_my_team = 0
         for player_id in Team.get_players(team):
             player = Player.get_by_id(player_id)
-            if player == "ALIVE": # if player is alive, no push
+            logging.info("Push: looking at player {}".format(player_id))
+            if player.state == "ALIVE": # if player is alive, no push
+                logging.info("He is alive.")
                 count_my_team += 1
 
-        if count_my_team > 0:
-            if team.target_of == team.to_kill:
+        if count_my_team == 1:
+            logging.info("Team key id: {} - to kill: {}".format(team.key.id(), team.to_kill))
+            if team.key.id() == team.to_kill:
+                logging.info("Push winner 1")
                 winner = Player.query(Player.state == "ALIVE").get()
                 msg = "Congratulations. You are the winner."
                 return [(winner.key.id(), msg), (WEI_HAN, "Game is over. Please check that winner got the message.")]
+        elif count_my_team > 0:
+            return []
 
         # Else, all players on this team DEAD, push
         aggressor_team = Team.get_by_id(team.target_of)
         target_team = Team.get_by_id(team.to_kill)
-
-        logging.info("aggressor team", aggressor_team)
-        logging.info("target team", target_team)
 
         aggressor_team.to_kill = target_team.key.id()
         aggressor_team.put()
@@ -122,12 +126,14 @@ class Team(ndb.Model):
                         target_player.codename)
 
         push_messages = []
-        if count == 1:
+        if count == 1 and aggressor_team.to_kill == aggressor_team.key.id():
+            logging.info("Push winner 2")
             message = "Congratulations. You are the winner."
             push_messages.append((WEI_HAN, "Game is over. Please check that winner got the message."))
 
         for aggressor_id in Team.get_players(aggressor_team):
-            push_messages.append((aggressor_id, message))
+            if Player.get_by_id(aggressor_id).state == "ALIVE":
+                push_messages.append((aggressor_id, message))
 
         return push_messages
 
