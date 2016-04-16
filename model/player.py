@@ -56,7 +56,7 @@ class Player(ndb.Model):
         return msg
 
     @classmethod
-    def spy_hint_attacker_target(cls, spy):
+    def spy_hint_names(cls, spy):
         ''' Spy hint realname - codename '''
         spy_team = Team.get_by_id(spy.team)
         random_people = Player.query(ndb.AND(Player.team != spy.team,\
@@ -64,7 +64,8 @@ class Player(ndb.Model):
         if len(random_people) == 0:
             return "SPY: No more new realname-codename hints."
         random_person = random.choice(random_people)
-        msg = "SPY: {}'s codename is {}.".format(random_people.realname,\
+        logging.info("Random person: {}".format(random_person))
+        msg = "SPY: {}'s codename is {}.".format(random_person.realname,\
                 random_person.codename)
         return msg
 
@@ -105,7 +106,7 @@ class Team(ndb.Model):
                 winner = Player.query(Player.state == "ALIVE").get()
                 msg = "Congratulations. You are the winner."
                 return [(winner.key.id(), msg), (WEI_HAN, "Game is over. Please check that winner got the message.")]
-        elif count_my_team > 0:
+        if count_my_team > 0:
             return []
 
         # Else, all players on this team DEAD, push
